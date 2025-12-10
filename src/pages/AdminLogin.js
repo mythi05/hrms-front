@@ -64,6 +64,7 @@ export default function AdminLogin() {
             </div>
             <h2 className="text-center text-gray-800 mb-2">Admin Login</h2>
             <p className="text-gray-500 text-center">Mời bạn đăng nhập!</p>
+                        <p className="text-gray-500 text-center">user name: admin password: admin123</p>
           </div>
 
           {error && <p className="text-red-500 text-center mb-4">{error}</p>}
