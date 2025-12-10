@@ -42,7 +42,7 @@ export default function LoginEmployee() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-green-100 to-green-200 p-4 relative overflow-hidden">
-      
+
       {/* Background blobs */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-32 -right-32 w-72 h-72 bg-green-300 rounded-full opacity-70 filter blur-3xl animate-blob"></div>
@@ -61,6 +61,9 @@ export default function LoginEmployee() {
             </div>
             <h2 className="text-center text-gray-800 mb-2">Employee Login</h2>
             <p className="text-gray-500 text-center">Đăng nhập để vào Employee portal</p>
+            <p className="text-gray-500 text-center">username: a.nguyen</p>
+            <p className="text-gray-500 text-center">password: 123456</p>
+
           </div>
 
           {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
