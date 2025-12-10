@@ -18,7 +18,7 @@ export default function AdminLogin() {
     setError('');
 
     try {
-      const res = await axios.post('http://localhost:8080/api/auth/login', form);
+      const res = await axios.post('https://app-f9bfc784-6639-4f0e-919c-b5ed407f3a5b.cleverapps.io/api/auth/login', form);
 
       // Kiểm tra role: cho phép ADMIN hoặc HR truy cập Admin portal
       if (!res.data.user || (res.data.user.role !== 'ADMIN' && res.data.user.role !== 'HR')) {

@@ -17,7 +17,7 @@ export default function LoginEmployee() {
     setIsLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:8080/api/auth/login", form);
+      const res = await axios.post("https://app-f9bfc784-6639-4f0e-919c-b5ed407f3a5b.cleverapps.io/api/auth/login", form);
 
       if (res.data.user.role !== "EMPLOYEE") {
         setError("Bạn không có quyền truy cập Employee portal");
