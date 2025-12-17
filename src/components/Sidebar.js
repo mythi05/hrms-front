@@ -34,7 +34,7 @@ export function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed, 
 
   const drawerClass = isMobile
     ? `fixed inset-y-0 left-0 w-64 transform transition-transform duration-300 ease-in-out ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`
-    : `static inset-auto transform-none transition-all duration-300 ease-in-out ${collapsed ? 'w-20' : 'w-64'}`;
+    : `relative flex-shrink-0 transition-all duration-300 ease-in-out ${collapsed ? 'w-20' : 'w-64'}`;
 
   return (
     <aside
@@ -55,7 +55,7 @@ export function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed, 
             className={`p-1 hover:bg-blue-800 rounded ${isMobile ? '' : 'hidden'}`}
             aria-label="Close sidebar"
           >
-            <X size={20} />
+           
           </button>
           <button
             type="button"
@@ -69,7 +69,7 @@ export function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed, 
       </div>
 
       {/* Menu items */}
-      <nav className="flex-1 px-3 py-4 overflow-y-auto">
+      <nav className="flex-1 px-3 py-4 overflow-hidden">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
@@ -79,17 +79,14 @@ export function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed, 
             <button
               key={item.id}
               onClick={() => setCurrentPage(item.id)}
-              className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg mb-1 transition-all duration-200 ease-in-out
-                ${!showLabel ? 'justify-center px-2' : 'justify-start'}
-                ${isActive ? 'bg-blue-700 text-white shadow-lg' : 'text-blue-100 hover:bg-blue-900/40'}`}
+              className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg mb-1 transition-colors ${isActive
+                  ? 'bg-blue-700 text-white shadow-lg'
+                  : 'text-blue-100 hover:bg-blue-900/40'
+                }`}
               title={collapsed ? item.label : ''}
             >
-              <Icon size={20} className="shrink-0" />
-              <span
-                className={`truncate whitespace-nowrap overflow-hidden transition-all duration-200 ease-in-out ${showLabel ? 'max-w-[220px] opacity-100' : 'max-w-0 opacity-0'}`}
-              >
-                {item.label}
-              </span>
+              <Icon size={20} />
+              {!collapsed && <span>{item.label}</span>}
             </button>
           );
         })}
