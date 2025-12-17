@@ -12,10 +12,11 @@ import {
   Settings,
   Building2,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  X
 } from 'lucide-react';
 
-export function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed }) {
+export function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed, mobileOpen, setMobileOpen }) {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'employees', label: 'Nhân viên', icon: Users },
@@ -32,17 +33,34 @@ export function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed }
   ];
 
   return (
-    <aside className={`bg-blue-900 text-white flex flex-col transition-all duration-300 ${collapsed ? 'w-20' : 'w-64'}`}>
+    <aside
+      className={`bg-blue-900 text-white flex flex-col transition-transform duration-300 z-40
+        fixed inset-y-0 left-0 w-64 transform ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0 md:static md:inset-auto md:transform-none md:transition-all
+        ${collapsed ? 'md:w-20' : 'md:w-64'}`}
+    >
       
       {/* Header + Collapse button */}
-      <div className="p-6 flex items-center justify-between">
+      <div className="p-4 md:p-6 flex items-center justify-between">
         {!collapsed && <h1 className="text-lg font-bold">HRMS Admin</h1>}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="p-1 hover:bg-blue-800 rounded"
-        >
-          {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setMobileOpen && setMobileOpen(false)}
+            className="p-1 hover:bg-blue-800 rounded md:hidden"
+            aria-label="Close sidebar"
+          >
+            <X size={20} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setCollapsed(!collapsed)}
+            className="p-1 hover:bg-blue-800 rounded hidden md:inline-flex"
+            aria-label="Toggle collapse"
+          >
+            {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+          </button>
+        </div>
       </div>
 
       {/* Menu items */}
@@ -60,7 +78,8 @@ export function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed }
               title={collapsed ? item.label : ''}
             >
               <Icon size={20} />
-              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && <span className="hidden md:inline">{item.label}</span>}
+              <span className="md:hidden">{item.label}</span>
             </button>
           );
         })}

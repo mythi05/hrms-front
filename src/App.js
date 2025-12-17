@@ -24,6 +24,7 @@ import AdminSettings from "./components/admin/AdminSettings";
 export default function App() {
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -66,16 +67,29 @@ export default function App() {
     };
 
     return (
-      <div className="flex h-screen bg-gray-50">
+      <div className="relative flex h-screen bg-gray-50">
+        {sidebarOpen && (
+          <button
+            type="button"
+            aria-label="Close sidebar"
+            onClick={() => setSidebarOpen(false)}
+            className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          />
+        )}
         <Sidebar
           currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
+          setCurrentPage={(page) => {
+            setCurrentPage(page);
+            setSidebarOpen(false);
+          }}
           collapsed={sidebarCollapsed}
           setCollapsed={setSidebarCollapsed}
+          mobileOpen={sidebarOpen}
+          setMobileOpen={setSidebarOpen}
         />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <Header onLogout={handleLogout} />
-          <main className="flex-1 overflow-y-auto p-6">{renderPageContent()}</main>
+          <Header onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} />
+          <main className="flex-1 overflow-y-auto p-4 md:p-6">{renderPageContent()}</main>
         </div>
       </div>
     );

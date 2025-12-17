@@ -1,6 +1,6 @@
-import { Search, Bell, Mail, User, LogOut } from 'lucide-react';
+import { Search, Bell, Mail, User, LogOut, Menu } from 'lucide-react';
 
-export function Header({ onLogout }) {
+export function Header({ onLogout, onOpenSidebar }) {
   const handleLogout = () => {
     const confirmed = window.confirm("Bạn có chắc muốn đăng xuất không?");
     if (confirmed && onLogout) {
@@ -9,10 +9,19 @@ export function Header({ onLogout }) {
   };
 
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
+    <header className="bg-white border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
       <div className="flex items-center justify-between">
+        <button
+          type="button"
+          aria-label="Open sidebar"
+          onClick={() => onOpenSidebar && onOpenSidebar()}
+          className="mr-3 inline-flex items-center justify-center rounded-lg p-2 hover:bg-gray-100 md:hidden"
+        >
+          <Menu size={20} className="text-gray-700" />
+        </button>
+
         {/* Search box */}
-        <div className="flex-1 max-w-md">
+        <div className="hidden md:block flex-1 max-w-md">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
@@ -24,7 +33,7 @@ export function Header({ onLogout }) {
         </div>
 
         {/* Icons và profile */}
-        <div className="flex items-center gap-4 ml-4">
+        <div className="flex items-center gap-2 md:gap-4 md:ml-4">
           <button className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <Mail size={20} className="text-gray-600" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
@@ -35,8 +44,8 @@ export function Header({ onLogout }) {
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>
 
-          <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
-            <div className="text-right">
+          <div className="flex items-center gap-3 pl-3 md:pl-4 border-l border-gray-200">
+            <div className="hidden md:block text-right">
               <div className="text-gray-800">Nguyễn Văn A</div>
               <div className="text-xs text-gray-500">Quản trị viên</div>
             </div>
@@ -50,7 +59,7 @@ export function Header({ onLogout }) {
               className="ml-4 flex items-center gap-1 text-red-600 hover:text-red-800"
             >
               <LogOut size={18} />
-              <span>Đăng xuất</span>
+              <span className="hidden md:inline">Đăng xuất</span>
             </button>
           </div>
         </div>
