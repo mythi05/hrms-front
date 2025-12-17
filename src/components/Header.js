@@ -9,7 +9,7 @@ export function Header({ onLogout, onOpenSidebar, showMenuButton }) {
   };
 
   return (
-    <header className="bg-white text-black border-b border-gray-200 px-4 py-3 md:px-6 md:py-4 relative z-20">
+    <header className="bg-white text-black border-b border-gray-200 px-4 py-3 md:px-6 md:py-4 relative z-10">
       <div className="flex items-center justify-between">
         {showMenuButton && (
           <button

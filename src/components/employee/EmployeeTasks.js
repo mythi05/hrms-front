@@ -74,32 +74,32 @@ export default function EmployeeTasks() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="mb-1">Công việc được giao</h1>
-          <p className="text-gray-600 text-sm">Theo dõi công việc được giao và cập nhật trạng thái thực hiện</p>
+          <h1 className="mb-1 text-xl sm:text-2xl font-bold">Công việc được giao</h1>
+          <p className="text-gray-600 text-sm sm:text-base">Theo dõi công việc được giao và cập nhật trạng thái thực hiện</p>
         </div>
       </div>
 
       <div className="bg-white rounded-lg shadow">
         <div className="p-4 border-b flex items-center justify-between">
           <div className="flex items-center gap-2 text-gray-700 text-sm">
-            <ListTodo size={18} />
-            <span>Danh sách công việc</span>
+            <ListTodo size={16} />
+            <span className="text-sm sm:text-base">Danh sách công việc</span>
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <table className="w-full text-sm min-w-[900px] sm:min-w-0 sm:w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="text-left p-3 text-xs text-gray-600">Tiêu đề</th>
-                <th className="text-left p-3 text-xs text-gray-600">Mô tả</th>
-                <th className="text-left p-3 text-xs text-gray-600">Hạn hoàn thành</th>
-                <th className="text-left p-3 text-xs text-gray-600">Ưu tiên</th>
+                <th className="text-left p-3 text-xs text-gray-600 hidden md:table-cell">Mô tả</th>
+                <th className="text-left p-3 text-xs text-gray-600 hidden sm:table-cell">Hạn hoàn thành</th>
+                <th className="text-left p-3 text-xs text-gray-600 hidden sm:table-cell">Ưu tiên</th>
                 <th className="text-left p-3 text-xs text-gray-600">Trạng thái</th>
-                <th className="text-left p-3 text-xs text-gray-600">Người giao</th>
+                <th className="text-left p-3 text-xs text-gray-600 hidden lg:table-cell">Người giao</th>
                 <th className="text-left p-3 text-xs text-gray-600">Hành động</th>
               </tr>
             </thead>
@@ -115,10 +115,12 @@ export default function EmployeeTasks() {
               ) : (
                 tasks.map((t) => (
                   <tr key={t.id} className="border-b hover:bg-gray-50">
-                    <td className="p-3 text-gray-800 font-medium">{t.title}</td>
-                    <td className="p-3 text-gray-700 max-w-xs break-words">{t.description}</td>
-                    <td className="p-3 text-gray-700">{t.dueDate || '-'}</td>
-                    <td className="p-3 text-gray-700">
+                    <td className="p-3 text-gray-800 font-medium">
+                      <div className="max-w-[220px] sm:max-w-[280px] truncate">{t.title}</div>
+                    </td>
+                    <td className="p-3 text-gray-700 max-w-xs break-words hidden md:table-cell">{t.description}</td>
+                    <td className="p-3 text-gray-700 text-xs sm:text-sm hidden sm:table-cell">{t.dueDate || '-'}</td>
+                    <td className="p-3 text-gray-700 hidden sm:table-cell">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-indigo-50 text-indigo-700">
                         {priorityLabel(t.priority)}
                       </span>
@@ -129,8 +131,9 @@ export default function EmployeeTasks() {
                         {statusLabel(t.status)}
                       </span>
                     </td>
-                    <td className="p-3 text-gray-700">{t.createdByName || '-'}</td>
-                    <td className="p-3 flex flex-wrap gap-2">
+                    <td className="p-3 text-gray-700 hidden lg:table-cell">{t.createdByName || '-'}</td>
+                    <td className="p-3">
+                      <div className="flex flex-wrap gap-2">
                       {t.status !== 'COMPLETED' && (
                         <button
                           onClick={() => handleChangeStatus(t, 'IN_PROGRESS')}
@@ -155,6 +158,7 @@ export default function EmployeeTasks() {
                           Hủy
                         </button>
                       )}
+                      </div>
                     </td>
                   </tr>
                 ))

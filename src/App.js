@@ -7,6 +7,7 @@ import { Dashboard } from "./components/Dashboard";
 import AdminLogin from "./pages/AdminLogin"; // Admin login
 import ProtectedRoute from "./pages/ProtectedRoute";
 import EmployeePortal from "./components/EmployeePortal";
+import "./App.css";
 import "./index5.css";
 import "./index2.css";
 import "./index4.css";
@@ -105,7 +106,7 @@ export default function App() {
             type="button"
             aria-label="Close sidebar"
             onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 z-30 bg-black/40"
+            className="fixed inset-0 z-40 bg-black/40"
           />
         )}
         <Sidebar
@@ -128,7 +129,7 @@ export default function App() {
             }}
             showMenuButton={isMobile}
           />
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">{renderPageContent()}</main>
+          <main className="flex-1 overflow-y-auto no-scrollbar p-4 md:p-6">{renderPageContent()}</main>
         </div>
       </div>
     );

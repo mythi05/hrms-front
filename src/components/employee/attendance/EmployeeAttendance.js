@@ -235,10 +235,10 @@ export default function EmployeeAttendance() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div>
-        <h1 className="mb-2">Chấm công</h1>
-        <p className="text-gray-600">Quản lý thời gian làm việc của bạn</p>
+        <h1 className="mb-1 text-xl sm:text-2xl font-bold">Chấm công</h1>
+        <p className="text-gray-600 text-sm sm:text-base">Quản lý thời gian làm việc của bạn</p>
       </div>
 
       <QRScannerModal
@@ -253,29 +253,29 @@ export default function EmployeeAttendance() {
       />
 
       {/* Check In/Out Card */}
-      <div className="bg-gradient-to-br from-green-500 to-green-700 rounded-lg shadow-lg p-8 text-white">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2">
-            <div className="flex items-center gap-3 mb-4">
-              <Clock size={32} />
+      <div className="bg-gradient-to-br from-green-500 to-green-700 rounded-lg shadow-lg p-4 sm:p-6 md:p-8 text-white">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="lg:col-span-2">
+            <div className="flex items-center gap-2 sm:gap-3 mb-4">
+              <Clock className="w-6 h-6 sm:w-8 sm:h-8" />
               <div>
-                <h2 className="text-white">Chấm công hôm nay</h2>
-                <p className="text-green-100 text-sm">{new Date().toLocaleDateString('vi-VN')}</p>
+                <h2 className="text-white text-sm sm:text-base md:text-lg">Chấm công hôm nay</h2>
+                <p className="text-green-100 text-xs sm:text-sm">{new Date().toLocaleDateString('vi-VN')}</p>
               </div>
             </div>
 
-            <div className="text-6xl mb-4">{currentTime}</div>
+            <div className="text-3xl sm:text-4xl md:text-6xl mb-4">{currentTime}</div>
 
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
               <button
-                className="bg-white text-green-700 px-8 py-3 rounded-lg hover:bg-green-50 transition"
+                className="bg-white text-green-700 px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-lg hover:bg-green-50 transition text-xs sm:text-sm w-full sm:w-auto"
                 onClick={handleCheckIn}
                 disabled={loading}
               >
                 Check In
               </button>
               <button
-                className="bg-white/20 text-white px-8 py-3 rounded-lg hover:bg-white/30 transition"
+                className="bg-white/20 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-lg hover:bg-white/30 transition text-xs sm:text-sm w-full sm:w-auto"
                 onClick={handleCheckOut}
                 disabled={loading}
               >
@@ -283,7 +283,7 @@ export default function EmployeeAttendance() {
               </button>
 
               <button
-                className="bg-white/10 text-white px-8 py-3 rounded-lg hover:bg-white/20 transition"
+                className="bg-white/10 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-lg hover:bg-white/20 transition text-xs sm:text-sm w-full sm:w-auto"
                 onClick={() => setShowQRScanner(true)}
                 disabled={loading}
               >
@@ -292,25 +292,25 @@ export default function EmployeeAttendance() {
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="bg-white/10 rounded-lg p-4">
-              <div className="text-green-100 text-sm mb-1">Check In</div>
-              <div className="text-2xl">{today?.checkIn || '--:--'}</div>
+          <div className="space-y-3 sm:space-y-4">
+            <div className="bg-white/10 rounded-lg p-3 sm:p-4">
+              <div className="text-green-100 text-xs sm:text-sm mb-1">Check In</div>
+              <div className="text-lg sm:text-xl md:text-2xl">{today?.checkIn || '--:--'}</div>
             </div>
-            <div className="bg-white/10 rounded-lg p-4">
-              <div className="text-green-100 text-sm mb-1">Check Out</div>
-              <div className="text-2xl">{today?.checkOut || '--:--'}</div>
+            <div className="bg-white/10 rounded-lg p-3 sm:p-4">
+              <div className="text-green-100 text-xs sm:text-sm mb-1">Check Out</div>
+              <div className="text-lg sm:text-xl md:text-2xl">{today?.checkOut || '--:--'}</div>
             </div>
-            <div className="bg-white/10 rounded-lg p-4">
-              <div className="text-green-100 text-sm mb-1">Tổng giờ</div>
-              <div className="text-2xl">{today?.totalHours ?? '0h'}</div>
+            <div className="bg-white/10 rounded-lg p-3 sm:p-4">
+              <div className="text-green-100 text-xs sm:text-sm mb-1">Tổng giờ</div>
+              <div className="text-lg sm:text-xl md:text-2xl">{today?.totalHours ?? '0h'}</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard title="Giờ làm tuần này" value={stats.weeklyHours} color="blue" icon={Clock} />
         <StatCard title="Đúng giờ" value={stats.onTime} color="green" icon={CheckCircle} />
         <StatCard title="Đi muộn" value={stats.lateCount} color="red" icon={XCircle} />
@@ -319,25 +319,25 @@ export default function EmployeeAttendance() {
 
       {/* History */}
       <div className="bg-white rounded-lg shadow">
-        <div className="p-6 border-b flex items-center justify-between">
-          <h3>Lịch sử chấm công</h3>
-          <select className="border border-gray-300 rounded-lg px-4 py-2 text-sm">
+        <div className="p-4 sm:p-6 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <h3 className="text-sm sm:text-base">Lịch sử chấm công</h3>
+          <select className="border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm w-full sm:w-auto">
             <option>Tháng này</option>
             <option>Tháng trước</option>
             <option>3 tháng</option>
           </select>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+          <table className="w-full min-w-[720px] sm:min-w-0 sm:w-full">
             <thead className="bg-gray-50 border-b">
               <tr>
-                <th className="text-left p-4 text-xs text-gray-600">Ngày</th>
-                <th className="text-left p-4 text-xs text-gray-600">Check In</th>
-                <th className="text-left p-4 text-xs text-gray-600">Check Out</th>
-                <th className="text-left p-4 text-xs text-gray-600">Tổng giờ</th>
-                <th className="text-left p-4 text-xs text-gray-600">Trạng thái</th>
-                <th className="text-left p-4 text-xs text-gray-600">Ghi chú</th>
+                <th className="text-left p-2 sm:p-4 text-xs text-gray-600">Ngày</th>
+                <th className="text-left p-2 sm:p-4 text-xs text-gray-600 hidden sm:table-cell">Check In</th>
+                <th className="text-left p-2 sm:p-4 text-xs text-gray-600 hidden sm:table-cell">Check Out</th>
+                <th className="text-left p-2 sm:p-4 text-xs text-gray-600 hidden md:table-cell">Tổng giờ</th>
+                <th className="text-left p-2 sm:p-4 text-xs text-gray-600">Trạng thái</th>
+                <th className="text-left p-2 sm:p-4 text-xs text-gray-600 hidden lg:table-cell">Ghi chú</th>
               </tr>
             </thead>
             <tbody>
@@ -348,11 +348,11 @@ export default function EmployeeAttendance() {
               ) : (
                 history.map((record, index) => (
                   <tr key={index} className="border-b hover:bg-gray-50">
-                    <td className="p-4 text-gray-700">{record.date}</td>
-                    <td className="p-4 text-gray-700">{record.checkIn || '--:--'}</td>
-                    <td className="p-4 text-gray-700">{record.checkOut || '--:--'}</td>
-                    <td className="p-4 text-gray-700">{record.totalHours ?? '0h'}</td>
-                    <td className="p-4">
+                    <td className="p-2 sm:p-4 text-gray-700 text-xs sm:text-sm">{record.date}</td>
+                    <td className="p-2 sm:p-4 text-gray-700 text-xs sm:text-sm hidden sm:table-cell">{record.checkIn || '--:--'}</td>
+                    <td className="p-2 sm:p-4 text-gray-700 text-xs sm:text-sm hidden sm:table-cell">{record.checkOut || '--:--'}</td>
+                    <td className="p-2 sm:p-4 text-gray-700 text-xs sm:text-sm hidden md:table-cell">{record.totalHours ?? '0h'}</td>
+                    <td className="p-2 sm:p-4">
                       <span className={`px-3 py-1 rounded-full text-xs ${
                         record.status === 'PRESENT' ? 'bg-green-100 text-green-700' :
                         record.status === 'LATE' ? 'bg-red-100 text-red-700' :
@@ -362,7 +362,7 @@ export default function EmployeeAttendance() {
                         {record.status}
                       </span>
                     </td>
-                    <td className="p-4 text-gray-500 text-sm">{record.note}</td>
+                    <td className="p-2 sm:p-4 text-gray-500 text-xs sm:text-sm hidden lg:table-cell">{record.note}</td>
                   </tr>
                 ))
               )}

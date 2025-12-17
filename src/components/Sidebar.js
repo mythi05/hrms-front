@@ -33,18 +33,18 @@ export function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed, 
   ];
 
   const drawerClass = isMobile
-    ? `fixed inset-y-0 left-0 w-64 transform transition-transform duration-300 ease-in-out ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`
+    ? `fixed inset-y-0 left-0 w-80 max-w-[85vw] transform transition-transform duration-300 ease-in-out ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`
     : `relative flex-shrink-0 transition-all duration-300 ease-in-out ${collapsed ? 'w-20' : 'w-64'}`;
 
   return (
     <aside
-      className={`bg-blue-900 text-white flex flex-col z-40 ${drawerClass}`}
+      className={`bg-blue-900 text-white flex flex-col z-50 min-h-0 ${drawerClass}`}
     >
       
       {/* Header + Collapse button */}
       <div className="p-4 md:p-6 flex items-center justify-between border-b border-blue-700">
         <h1
-          className={`text-lg font-bold whitespace-nowrap overflow-hidden transition-all duration-200 ease-in-out ${collapsed ? 'max-w-0 opacity-0' : 'max-w-[160px] opacity-100'}`}
+          className={`text-lg font-bold whitespace-nowrap overflow-hidden transition-all duration-200 ease-in-out ${collapsed && !isMobile ? 'max-w-0 opacity-0' : 'max-w-[160px] opacity-100'}`}
         >
           HRMS Admin
         </h1>
@@ -55,7 +55,7 @@ export function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed, 
             className={`p-1 hover:bg-blue-800 rounded ${isMobile ? '' : 'hidden'}`}
             aria-label="Close sidebar"
           >
-           
+            <X size={20} />
           </button>
           <button
             type="button"
@@ -69,7 +69,7 @@ export function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed, 
       </div>
 
       {/* Menu items */}
-      <nav className="flex-1 px-3 py-4 overflow-hidden">
+      <nav className="flex-1 px-3 py-4 overflow-y-auto overscroll-contain min-h-0 no-scrollbar">
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentPage === item.id;
@@ -86,7 +86,7 @@ export function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed, 
               title={collapsed ? item.label : ''}
             >
               <Icon size={20} />
-              {!collapsed && <span>{item.label}</span>}
+              {showLabel && <span className="truncate">{item.label}</span>}
             </button>
           );
         })}
@@ -95,7 +95,7 @@ export function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed, 
       {/* Footer */}
       <div className="p-4 border-t border-blue-700">
         <div
-          className={`text-xs text-blue-300 whitespace-nowrap overflow-hidden transition-all duration-200 ease-in-out ${collapsed ? 'max-w-0 opacity-0' : 'max-w-[220px] opacity-100'}`}
+          className={`text-xs text-blue-300 whitespace-nowrap overflow-hidden transition-all duration-200 ease-in-out ${collapsed && !isMobile ? 'max-w-0 opacity-0' : 'max-w-[220px] opacity-100'}`}
         >
           © 2025 HRMS System
         </div>
