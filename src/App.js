@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { Sidebar } from "./components/Sidebar";
 import { Header } from "./components/Header";
@@ -25,7 +25,39 @@ export default function App() {
   const [currentPage, setCurrentPage] = useState("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+
+    if (mq.addEventListener) mq.addEventListener("change", update);
+    else mq.addListener(update);
+
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener("change", update);
+      else mq.removeListener(update);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile || !sidebarOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") setSidebarOpen(false);
+    };
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMobile, sidebarOpen]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -68,27 +100,34 @@ export default function App() {
 
     return (
       <div className="relative flex h-screen bg-gray-50">
-        {sidebarOpen && (
+        {isMobile && sidebarOpen && (
           <button
             type="button"
             aria-label="Close sidebar"
             onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 z-30 bg-black/40 md:hidden"
+            className="fixed inset-0 z-30 bg-black/40"
           />
         )}
         <Sidebar
           currentPage={currentPage}
           setCurrentPage={(page) => {
             setCurrentPage(page);
-            setSidebarOpen(false);
+            if (isMobile) setSidebarOpen(false);
           }}
           collapsed={sidebarCollapsed}
           setCollapsed={setSidebarCollapsed}
           mobileOpen={sidebarOpen}
           setMobileOpen={setSidebarOpen}
+          isMobile={isMobile}
         />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <Header onLogout={handleLogout} onOpenSidebar={() => setSidebarOpen(true)} />
+          <Header
+            onLogout={handleLogout}
+            onOpenSidebar={() => {
+              if (isMobile) setSidebarOpen(true);
+            }}
+            showMenuButton={isMobile}
+          />
           <main className="flex-1 overflow-y-auto p-4 md:p-6">{renderPageContent()}</main>
         </div>
       </div>
