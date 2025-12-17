@@ -8,6 +8,7 @@ import EmployeePayroll from './employee/EmployeePayroll';
 import EmployeeTasks from './employee/EmployeeTasks';
 import EmployeePerformance from './employee/EmployeePerformance';
 import EmployeeNotifications from './employee/EmployeeNotifications';
+import EmployeeSettings from './employee/EmployeeSettings';
 import { EmployeeSidebar } from './employee/EmployeeSidebar';
 
 export default function EmployeePortal() {
@@ -45,6 +46,7 @@ export default function EmployeePortal() {
           {currentPage === 'tasks' && <EmployeeTasks />}
           {currentPage === 'performance' && <EmployeePerformance />}
           {currentPage === 'notifications' && <EmployeeNotifications />}
+          {currentPage === 'settings' && <EmployeeSettings />}
           {currentPage === 'training' && (
             <div className="bg-white rounded-lg shadow p-8">
               <h2 className="mb-4">Khóa học của tôi</h2>

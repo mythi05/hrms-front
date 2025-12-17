@@ -1,7 +1,7 @@
 // src/api/attendanceApi.js
 import axiosInstance from "./axios";
 
-const API_BASE_URL = "/attendance"; // axiosInstance baseURL = http://localhost:8080/api
+const API_BASE_URL = "/attendance"; // axiosInstance baseURL = https://app-f9bfc784-6639-4f0e-919c-b5ed407f3a5b.cleverapps.io/api
 
 // Hàm hỗ trợ để lấy ngày hiện tại ở định dạng YYYY-MM-DD (dùng cho việc hiển thị trong AttendanceMonth/History nếu cần)
 const formatDate = (dateString) => {
@@ -83,6 +83,10 @@ export const downloadAttendanceTemplate = () => {
   return axiosInstance.get(`${API_BASE_URL}/admin/template`, {
     responseType: 'blob' // Quan trọng để download file
   });
+};
+
+export const scanAttendanceQR = (payload) => {
+  return axiosInstance.post(`/qr-attendance/scan`, payload);
 };
 
 // Giả định thêm một hàm lấy thống kê nhanh (không có trong controller, cần bổ sung ở backend)

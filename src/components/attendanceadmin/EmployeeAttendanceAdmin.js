@@ -2,27 +2,28 @@
 import React, { useState, useEffect } from "react";
 import { Clock, TrendingUp, CheckCircle, XCircle, Trash2, Edit, Upload, Download, User, Plus } from "lucide-react";
 import { adminGetAllAttendance, adminDeleteAttendance, formatAttendanceRecords } from "../../api/attendanceApi";
+import { createAttendanceQR, getAttendanceQRsByDate, getRecentQRScans, getQRImageUrl } from "../../api/qrAttendanceApi";
 import AttendanceModal from "./AttendanceModal";
 import EmployeeDetailModal from "./EmployeeDetailModal";
 
 // Component phụ cho thẻ thống kê (giữ nguyên từ bản Employee)
 function StatCard({ title, value, color, icon: Icon }) {
-    const colors = {
-      blue: 'border-blue-500 bg-blue-50',
-      green: 'border-green-500 bg-green-50',
-      red: 'border-red-500 bg-red-50',
-      purple: 'border-purple-500 bg-purple-50',
-    };
-  
-    return (
-      <div className={`bg-white rounded-lg shadow p-4 border-l-4 ${colors[color]}`}>
-        <div className="flex items-center justify-between mb-2">
-          <Icon size={20} className="text-gray-400" />
-        </div>
-        <div className="text-2xl text-gray-900 mb-1 font-bold">{value}</div>
-        <div className="text-xs text-gray-600">{title}</div>
+  const colors = {
+    blue: 'border-blue-500 bg-blue-50',
+    green: 'border-green-500 bg-green-50',
+    red: 'border-red-500 bg-red-50',
+    purple: 'border-purple-500 bg-purple-50',
+  };
+
+  return (
+    <div className={`bg-white rounded-lg shadow p-4 border-l-4 ${colors[color]}`}>
+      <div className="flex items-center justify-between mb-2">
+        <Icon size={20} className="text-gray-400" />
       </div>
-    );
+      <div className="text-2xl text-gray-900 mb-1 font-bold">{value}</div>
+      <div className="text-xs text-gray-600">{title}</div>
+    </div>
+  );
 }
 
 export default function EmployeeAttendanceAdmin() {
@@ -39,6 +40,20 @@ export default function EmployeeAttendanceAdmin() {
     lateMonth: 0,
     offMonth: 0,
   });
+
+  const [qrForm, setQrForm] = useState({
+    date: new Date().toISOString().slice(0, 10),
+    shiftType: "FULL_TIME",
+    scanType: "CHECK_IN",
+    validFrom: "00:00",
+    validTo: "23:59",
+  });
+  const [qrLoading, setQrLoading] = useState(false);
+  const [qrError, setQrError] = useState("");
+  const [qrList, setQrList] = useState([]);
+
+  const [recentScans, setRecentScans] = useState([]);
+  const [recentLoading, setRecentLoading] = useState(false);
 
   // Modal states
   const [showImportModal, setShowImportModal] = useState(false);
@@ -87,8 +102,64 @@ export default function EmployeeAttendanceAdmin() {
     setLoading(false);
   };
 
+  const loadQRForToday = async () => {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const res = await getAttendanceQRsByDate(today);
+      setQrList(res.data || []);
+    } catch (err) {
+      console.error("Lỗi tải QR chấm công:", err);
+    }
+  };
+
+  const loadRecent = async (withLoading = true) => {
+    if (withLoading) setRecentLoading(true);
+    try {
+      const res = await getRecentQRScans(20);
+      setRecentScans(res.data || []);
+    } catch (err) {
+      console.error("Lỗi tải lịch sử quét QR:", err);
+    }
+    if (withLoading) setRecentLoading(false);
+  };
+
+  const handleQrFormChange = (e) => {
+    const { name, value } = e.target;
+    setQrForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const submitCreateQR = async () => {
+    setQrLoading(true);
+    setQrError("");
+    try {
+      const payload = {
+        date: qrForm.date,
+        shiftType: qrForm.shiftType,
+        scanType: qrForm.scanType,
+        validFrom: qrForm.validFrom,
+        validTo: qrForm.validTo,
+      };
+      await createAttendanceQR(payload);
+      await loadQRForToday();
+      alert("Tạo QR chấm công thành công!");
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data || "Không thể tạo QR";
+      setQrError(String(msg));
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchAllAttendance();
+    loadQRForToday();
+    loadRecent();
+
+    const interval = setInterval(() => {
+      loadRecent(false);
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Các hàm xử lý admin (cần được implement đầy đủ)
@@ -152,6 +223,154 @@ export default function EmployeeAttendanceAdmin() {
           <Plus size={18} />
           Thêm Bản ghi
         </button>
+      </div>
+
+      {/* QR Attendance Management */}
+      <div className="bg-white rounded-lg shadow mb-6">
+        <div className="p-6 border-b flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-800">QR chấm công theo ca</h3>
+        </div>
+        <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="space-y-4 md:col-span-1">
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">Ngày</label>
+              <input
+                type="date"
+                name="date"
+                value={qrForm.date}
+                onChange={handleQrFormChange}
+                className="w-full border rounded-lg px-3 py-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">Ca làm</label>
+              <select
+                name="shiftType"
+                value={qrForm.shiftType}
+                onChange={handleQrFormChange}
+                disabled
+                className="w-full border rounded-lg px-3 py-2"
+              >
+                <option value="FULL_TIME">Full-time</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm text-gray-700 mb-1">Loại quét</label>
+              <select
+                name="scanType"
+                value={qrForm.scanType}
+                onChange={handleQrFormChange}
+                className="w-full border rounded-lg px-3 py-2"
+              >
+                <option value="CHECK_IN">Vào ca (Check-in)</option>
+                <option value="CHECK_OUT">Ra ca (Check-out)</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">Từ giờ</label>
+                <input
+                  type="time"
+                  name="validFrom"
+                  value={qrForm.validFrom}
+                  onChange={handleQrFormChange}
+                  disabled
+                  className="w-full border rounded-lg px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 mb-1">Đến giờ</label>
+                <input
+                  type="time"
+                  name="validTo"
+                  value={qrForm.validTo}
+                  onChange={handleQrFormChange}
+                  disabled
+                  className="w-full border rounded-lg px-3 py-2"
+                />
+              </div>
+            </div>
+            {qrError && (
+              <div className="text-sm text-red-600">{qrError}</div>
+            )}
+            <button
+              onClick={submitCreateQR}
+              disabled={qrLoading}
+              className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-60"
+            >
+              {qrLoading ? "Đang tạo QR..." : "Tạo QR chấm công"}
+            </button>
+          </div>
+
+          <div className="md:col-span-2 space-y-4">
+            <h4 className="font-semibold text-gray-800">Danh sách QR ngày hôm nay</h4>
+            {qrList.length === 0 ? (
+              <div className="text-sm text-gray-500">Chưa có QR nào cho ngày hôm nay.</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {qrList.map((qr) => (
+                  <div key={qr.id} className="border rounded-lg p-3 flex flex-col items-center gap-2">
+                    <div className="text-sm font-semibold text-gray-800">
+                      {qr.shiftTypeDisplay} - {qr.scanTypeDisplay}
+                    </div>
+                    <div className="text-xs text-gray-500">Hiệu lực: {qr.timeRange}</div>
+                    <img
+                      src={getQRImageUrl(qr.qrCode, 260, 260)}
+                      alt="QR chấm công"
+                      className="w-full max-w-[220px] sm:max-w-[260px] border rounded"
+                    />
+                    <div className="text-[10px] text-gray-400 break-all">{qr.qrCode}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Recent QR Scans */}
+      <div className="bg-white rounded-lg shadow mt-6">
+        <div className="p-6 border-b flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-gray-800">Lượt quét QR gần nhất</h3>
+          <button
+            onClick={() => loadRecent()}
+            className="px-3 py-1 text-sm rounded-lg border hover:bg-gray-50"
+          >
+            Tải lại
+          </button>
+        </div>
+        <div className="p-6 overflow-x-auto">
+          {recentLoading ? (
+            <div className="text-center text-gray-500 text-sm">Đang tải lượt quét QR...</div>
+          ) : recentScans.length === 0 ? (
+            <div className="text-center text-gray-500 text-sm">Chưa có lượt quét nào.</div>
+          ) : (
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b">
+                <tr>
+                  <th className="text-left p-2 text-xs text-gray-600">Thời gian</th>
+                  <th className="text-left p-2 text-xs text-gray-600">Nhân viên</th>
+                  <th className="text-left p-2 text-xs text-gray-600">Loại quét</th>
+                  <th className="text-left p-2 text-xs text-gray-600">Ca</th>
+                  <th className="text-left p-2 text-xs text-gray-600">Trạng thái</th>
+                  <th className="text-left p-2 text-xs text-gray-600">Ghi chú lỗi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentScans.map((log) => (
+                  <tr key={log.id} className="border-b hover:bg-gray-50">
+                    <td className="p-2 text-gray-700">{log.scanTime}</td>
+                    <td className="p-2 text-gray-700">{log.employeeId}</td>
+                    <td className="p-2 text-gray-700">{log.scanType}</td>
+                    <td className="p-2 text-gray-700">{log.shiftType}</td>
+                    <td className="p-2 text-gray-700">{log.status}</td>
+                    <td className="p-2 text-gray-500 text-xs">{log.errorMessage || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
       {/* Đồng hồ và Thống kê nhanh chung */}

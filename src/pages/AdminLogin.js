@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, User, LogIn, Shield } from 'lucide-react';
+import { Lock, User, LogIn, Shield, Users } from 'lucide-react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import "./index3.css";
@@ -64,9 +64,11 @@ export default function AdminLogin() {
             </div>
             <h2 className="text-center text-gray-800 mb-2">Admin Login</h2>
             <p className="text-gray-500 text-center">Mời bạn đăng nhập!</p>
-                        <p className="text-gray-500 text-center">user name: admin password: admin123</p>
-          </div>
+                        <p className="text-gray-500 text-center">user name: admin </p>
+ 
+                        <p className="text-gray-500 text-center">password: admin123 </p>
 
+</div>
           {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -122,6 +124,18 @@ export default function AdminLogin() {
                 </>
               )}
             </button>
+
+            {/* Đăng nhập nhân viên */}
+            <div className="flex items-center justify-center mt-6">
+              <button
+                type="button"
+                onClick={() => navigate("/employee/login")}
+                className="flex items-center gap-2 px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transform hover:scale-[1.03] transition-all shadow-md hover:shadow-lg"
+              >
+                <Users className="w-4 h-4" />
+                <span>Đăng nhập nhân viên</span>
+              </button>
+            </div>
           </form>
         </div>
       </div>

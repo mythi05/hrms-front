@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Clock, Calendar, TrendingUp, CheckCircle, XCircle } from 'lucide-react';
 import { 
   checkIn,
   checkOut,
   getTodayAttendance,
   getAttendanceHistory,
+  scanAttendanceQR,
   formatAttendanceRecords
 } from '../../../api/attendanceApi';
 
@@ -14,6 +15,15 @@ export default function EmployeeAttendance() {
   const [history, setHistory] = useState([]);
   const [stats, setStats] = useState({ weeklyHours: '0h', onTime: '0/0', lateCount: '0', overtime: '0h' });
   const [loading, setLoading] = useState(false);
+
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [qrManualCode, setQrManualCode] = useState('');
+  const [qrScanLoading, setQrScanLoading] = useState(false);
+  const [qrError, setQrError] = useState('');
+
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const scanTimerRef = useRef(null);
 
   const employeeId = (() => {
     try {
@@ -89,6 +99,26 @@ export default function EmployeeAttendance() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [employeeId]);
 
+  useEffect(() => {
+    if (!showQRScanner) {
+      stopCamera();
+      setQrManualCode('');
+      setQrError('');
+      setQrScanLoading(false);
+      return;
+    }
+
+    const supported = typeof window !== 'undefined' && 'BarcodeDetector' in window;
+    if (supported) {
+      startCamera();
+    }
+
+    return () => {
+      stopCamera();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showQRScanner]);
+
   const handleCheckIn = async () => {
     if (!employeeId) {
       alert('Không tìm thấy thông tin nhân viên (user.id). Vui lòng đăng nhập lại.');
@@ -117,12 +147,110 @@ export default function EmployeeAttendance() {
 
   const fmtDate = (d) => (d ? new Date(d).toLocaleDateString('vi-VN') : '—');
 
+  const stopCamera = () => {
+    try {
+      if (scanTimerRef.current) {
+        clearInterval(scanTimerRef.current);
+        scanTimerRef.current = null;
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(t => t.stop());
+        streamRef.current = null;
+      }
+    } catch {
+    }
+  };
+
+  const startCamera = async () => {
+    setQrError('');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' },
+        audio: false,
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+
+      const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+
+      scanTimerRef.current = setInterval(async () => {
+        if (!videoRef.current) return;
+        if (qrScanLoading) return;
+        if (videoRef.current.readyState < 2) return;
+
+        try {
+          const barcodes = await detector.detect(videoRef.current);
+          const value = barcodes && barcodes[0] ? barcodes[0].rawValue : '';
+          if (value) {
+            stopCamera();
+            await submitScan(value);
+          }
+        } catch {
+        }
+      }, 500);
+    } catch (err) {
+      setQrError('Không thể mở camera. Vui lòng cấp quyền camera hoặc nhập mã QR thủ công.');
+    }
+  };
+
+  const formatScanMessage = (resp) => {
+    const scanType = resp?.scanType;
+    const checkTime = resp?.checkTime;
+    const shift = resp?.shiftType;
+
+    if (scanType === 'CHECK_IN') {
+      return `✅ ${resp.message}\nGiờ vào: ${checkTime || '--:--'}\nCa: ${shift || ''}`;
+    }
+    if (scanType === 'CHECK_OUT') {
+      return `⏰ ${resp.message}\nGiờ ra: ${checkTime || '--:--'}\nCa: ${shift || ''}`;
+    }
+    return resp?.message || 'Không có dữ liệu phản hồi';
+  };
+
+  const submitScan = async (qrCode) => {
+    if (!qrCode) {
+      setQrError('Vui lòng nhập mã QR.');
+      return;
+    }
+    setQrScanLoading(true);
+    setQrError('');
+    try {
+      const res = await scanAttendanceQR({
+        qrCode,
+        userAgent: navigator.userAgent,
+      });
+
+      alert(formatScanMessage(res.data));
+      setShowQRScanner(false);
+      await loadData();
+    } catch (err) {
+      const msg = err.response?.data?.message || err.response?.data?.error || err.response?.data || 'Quét QR thất bại';
+      setQrError(String(msg));
+    } finally {
+      setQrScanLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="mb-2">Chấm công</h1>
         <p className="text-gray-600">Quản lý thời gian làm việc của bạn</p>
       </div>
+
+      <QRScannerModal
+        open={showQRScanner}
+        onClose={() => setShowQRScanner(false)}
+        videoRef={videoRef}
+        qrManualCode={qrManualCode}
+        setQrManualCode={setQrManualCode}
+        onSubmit={submitScan}
+        loading={qrScanLoading}
+        error={qrError}
+      />
 
       {/* Check In/Out Card */}
       <div className="bg-gradient-to-br from-green-500 to-green-700 rounded-lg shadow-lg p-8 text-white">
@@ -152,6 +280,14 @@ export default function EmployeeAttendance() {
                 disabled={loading}
               >
                 Check Out
+              </button>
+
+              <button
+                className="bg-white/10 text-white px-8 py-3 rounded-lg hover:bg-white/20 transition"
+                onClick={() => setShowQRScanner(true)}
+                disabled={loading}
+              >
+                Quét QR
               </button>
             </div>
           </div>
@@ -232,6 +368,81 @@ export default function EmployeeAttendance() {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function QRScannerModal({
+  open,
+  onClose,
+  videoRef,
+  qrManualCode,
+  setQrManualCode,
+  onSubmit,
+  loading,
+  error,
+}) {
+  if (!open) return null;
+
+  const supported = typeof window !== 'undefined' && 'BarcodeDetector' in window;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="bg-white w-full h-[90vh] sm:h-auto sm:max-h-[90vh] sm:max-w-lg rounded-t-xl sm:rounded-xl shadow-2xl overflow-hidden flex flex-col">
+        <div className="px-4 sm:px-6 py-4 border-b flex items-center justify-between shrink-0">
+          <h3 className="text-gray-900">Quét QR chấm công</h3>
+          <button className="px-3 py-1 rounded-lg border" onClick={onClose} disabled={loading}>Đóng</button>
+        </div>
+
+        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto">
+          {supported ? (
+            <div className="w-full rounded-lg overflow-hidden bg-black">
+              <video
+                ref={videoRef}
+                className="w-full aspect-square sm:aspect-video max-h-[45vh] object-cover"
+                playsInline
+                muted
+              />
+            </div>
+          ) : (
+            <div className="text-sm text-gray-600">
+              Trình duyệt của bạn chưa hỗ trợ quét QR trực tiếp. Vui lòng nhập mã QR thủ công.
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <label className="text-sm text-gray-700">Mã QR (nhập thủ công nếu cần)</label>
+            <input
+              className="w-full border rounded-lg px-3 py-2"
+              value={qrManualCode}
+              onChange={(e) => setQrManualCode(e.target.value)}
+              placeholder="Dán/nhập mã QR..."
+              disabled={loading}
+            />
+          </div>
+
+          {error ? (
+            <div className="text-sm text-red-600">{error}</div>
+          ) : null}
+
+          <div className="flex gap-3 justify-end">
+            <button
+              className="px-4 py-2 rounded-lg border"
+              onClick={onClose}
+              disabled={loading}
+            >
+              Hủy
+            </button>
+            <button
+              className="px-4 py-2 rounded-lg bg-green-600 text-white disabled:opacity-60"
+              onClick={() => onSubmit(qrManualCode)}
+              disabled={loading}
+            >
+              {loading ? 'Đang xử lý...' : 'Gửi mã QR'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

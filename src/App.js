@@ -19,6 +19,7 @@ import DepartmentManagement from "./components/admin/DepartmentManagement";
 import DepartmentDetails from "./components/admin/DepartmentDetails";
 import AdminTaskPage from "./components/admin/AdminTaskPage";
 import AdminPerformancePage from "./components/admin/AdminPerformancePage";
+import AdminSettings from "./components/admin/AdminSettings";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState("dashboard");
@@ -58,7 +59,7 @@ export default function App() {
         case "reports":
           return <div>Báo cáo</div>;
         case "settings":
-          return <div>Cài đặt</div>;
+          return <AdminSettings />;
         default:
           return <Dashboard />;
       }

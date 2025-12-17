@@ -6,6 +6,7 @@ import {
   DollarSign,
   GraduationCap,
   FileText,
+  Settings,
   LogOut,
   ChevronLeft,
   ChevronRight
@@ -24,6 +25,7 @@ export function EmployeeSidebar({ currentPage, setCurrentPage, collapsed, setCol
     { id: 'training', label: 'Đào tạo', icon: GraduationCap },
     { id: 'tasks', label: 'Công việc', icon: FileText },
     { id: 'documents', label: 'Tài liệu', icon: Calendar },
+    { id: 'settings', label: 'Cài đặt', icon: Settings },
   ];
 
 const handleLogout = () => {

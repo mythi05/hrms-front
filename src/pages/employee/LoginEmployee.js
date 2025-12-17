@@ -1,8 +1,8 @@
-// src/pages/employee/LoginEmployee.js
 import React, { useState } from "react";
-import { User, Lock, LogIn } from "lucide-react";
+import { Lock, User, LogIn, Shield } from "lucide-react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+
 export default function LoginEmployee() {
   const [form, setForm] = useState({ username: "", password: "" });
   const [isLoading, setIsLoading] = useState(false);
@@ -41,32 +41,30 @@ export default function LoginEmployee() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-green-100 to-green-200 p-4 relative overflow-hidden">
-
-      {/* Background blobs */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-32 -right-32 w-72 h-72 bg-green-300 rounded-full opacity-70 filter blur-3xl animate-blob"></div>
-        <div className="absolute -bottom-32 -left-32 w-72 h-72 bg-teal-300 rounded-full opacity-70 filter blur-3xl animate-blob animation-delay-2000"></div>
-        <div className="absolute top-40 left-40 w-72 h-72 bg-lime-300 rounded-full opacity-70 filter blur-3xl animate-blob animation-delay-4000"></div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 via-green-100 to-green-200 p-4">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-lime-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-green-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute top-40 left-40 w-80 h-80 bg-teal-300 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
       </div>
 
       {/* Login card */}
       <div className="relative bg-white/80 backdrop-blur-lg shadow-2xl rounded-3xl w-full max-w-md overflow-hidden">
-        <div className="h-2 bg-gradient-to-r from-green-500 via-teal-500 to-lime-500"></div>
-
+        <div className="h-2 bg-gradient-to-r from-green-500 via-teal-500 to-emerald-500"></div>
+        
         <div className="p-8 sm:p-12">
           <div className="flex flex-col items-center mb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg mb-4 transform hover:scale-105 transition-transform">
+            <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg mb-4 transform hover:scale-105 transition-transform">
               <User className="w-10 h-10 text-white" />
             </div>
             <h2 className="text-center text-gray-800 mb-2">Employee Login</h2>
             <p className="text-gray-500 text-center">Đăng nhập để vào Employee portal</p>
             <p className="text-gray-500 text-center">username: a.nguyen</p>
             <p className="text-gray-500 text-center">password: 123456</p>
-
           </div>
 
-          {error && <p className="text-red-500 mb-4 text-center">{error}</p>}
+          {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="relative">
@@ -80,7 +78,7 @@ export default function LoginEmployee() {
                   placeholder="Nhập tên đăng nhập"
                   value={form.username}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -93,12 +91,12 @@ export default function LoginEmployee() {
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  name="password"
                   type="password"
+                  name="password"
                   placeholder="Nhập mật khẩu"
                   value={form.password}
                   onChange={handleChange}
-                  className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-100 outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
                   required
                 />
               </div>
@@ -107,7 +105,7 @@ export default function LoginEmployee() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-3 rounded-xl hover:from-green-600 hover:to-teal-600 transform hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-green-500 to-teal-600 text-white py-3 rounded-xl hover:from-green-600 hover:to-teal-700 transform hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -121,6 +119,18 @@ export default function LoginEmployee() {
                 </>
               )}
             </button>
+
+            {/* Đăng nhập quản trị */}
+            <div className="flex items-center justify-center mt-6">
+              <button
+                type="button"
+                onClick={() => navigate("/admin/login")}
+                className="flex items-center gap-2 px-4 py-2 text-sm bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-lg hover:from-green-600 hover:to-teal-700 transform hover:scale-[1.03] transition-all shadow-md hover:shadow-lg"
+              >
+                <Shield className="w-4 h-4" />
+                <span>Đăng nhập quản trị</span>
+              </button>
+            </div>
           </form>
         </div>
       </div>
