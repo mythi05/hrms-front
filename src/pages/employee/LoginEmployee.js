@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Lock, User, LogIn, Shield } from "lucide-react";
-import axios from "axios";
+import axiosInstance from "../../api/axios";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginEmployee() {
@@ -17,7 +17,7 @@ export default function LoginEmployee() {
     setIsLoading(true);
 
     try {
-      const res = await axios.post("https://app-f9bfc784-6639-4f0e-919c-b5ed407f3a5b.cleverapps.io/api/auth/login", form);
+      const res = await axiosInstance.post("/auth/login", form);
 
       if (res.data.user.role !== "EMPLOYEE") {
         setError("Bạn không có quyền truy cập Employee portal");
@@ -136,7 +136,7 @@ export default function LoginEmployee() {
       </div>
 
       {/* Blob animation */}
-      <style jsx>{`
+      <style>{`
         @keyframes blob {
           0% { transform: translate(0px, 0px) scale(1); }
           33% { transform: translate(30px, -50px) scale(1.1); }

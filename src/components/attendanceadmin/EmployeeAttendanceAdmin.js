@@ -1,7 +1,7 @@
 // src/pages/EmployeeAttendanceAdmin.jsx (Bản dành cho Admin)
 import React, { useState, useEffect } from "react";
 import { Clock, TrendingUp, CheckCircle, XCircle, Trash2, Edit, Upload, Download, User, Plus } from "lucide-react";
-import { adminGetAllAttendance, adminDeleteAttendance, formatAttendanceRecords } from "../../api/attendanceApi";
+import { adminGetAllAttendance, adminDeleteAttendance, adminDeleteAllAttendance, formatAttendanceRecords } from "../../api/attendanceApi";
 import { createAttendanceQR, getAttendanceQRsByDate, getRecentQRScans, getQRImageUrl } from "../../api/qrAttendanceApi";
 import AttendanceModal from "./AttendanceModal";
 import EmployeeDetailModal from "./EmployeeDetailModal";
@@ -167,10 +167,22 @@ export default function EmployeeAttendanceAdmin() {
     if (!window.confirm(`Bạn có chắc muốn xóa bản ghi chấm công ID: ${id}?`)) return;
     try {
       await adminDeleteAttendance(id);
-      await fetchAllAttendance();
+      fetchAllAttendance(); // Reload lại data
     } catch (err) {
-      console.error("Lỗi xóa bản ghi chấm công:", err);
-      alert("Không thể xóa bản ghi chấm công.");
+      console.error("Lỗi khi xóa:", err);
+      alert("Không thể xóa bản ghi");
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (!window.confirm("⚠️ CẢNH BÁO: Bạn có chắc muốn xóa TẤT CẢ dữ liệu chấm công? Hành động này không thể hoàn tác!")) return;
+    try {
+      await adminDeleteAllAttendance();
+      fetchAllAttendance(); // Reload lại data
+      alert("✅ Đã xóa tất cả dữ liệu chấm công thành công!");
+    } catch (err) {
+      console.error("Lỗi khi xóa tất cả:", err);
+      alert("❌ Không thể xóa dữ liệu. Vui lòng thử lại.");
     }
   };
 
@@ -222,6 +234,13 @@ export default function EmployeeAttendanceAdmin() {
         >
           <Plus size={18} />
           Thêm Bản ghi
+        </button>
+        <button
+          onClick={handleDeleteAll}
+          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition flex items-center gap-2"
+        >
+          <Trash2 size={18} />
+          Xóa Tất Cả
         </button>
       </div>
 

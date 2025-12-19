@@ -59,6 +59,10 @@ export const adminDeleteAttendance = (id) => {
   return axiosInstance.delete(`${API_BASE_URL}/admin/${id}`);
 };
 
+export const adminDeleteAllAttendance = () => {
+  return axiosInstance.delete(`${API_BASE_URL}/admin/all`);
+};
+
 // --- API Import/Export Excel ---
 
 export const exportAttendanceToExcel = (params = {}) => {
