@@ -1,9 +1,9 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-baseURL: "http://localhost:8080/api",
+baseURL: "https://app-f9bfc784-6639-4f0e-919c-b5ed407f3a5b.cleverapps.io/api",
 });
-//http://localhost:8080/api/
+//https://app-f9bfc784-6639-4f0e-919c-b5ed407f3a5b.cleverapps.io/api/
 // Gửi token tự động nếu có
 axiosInstance.interceptors.request.use(config => {
   let token = localStorage.getItem("token");
