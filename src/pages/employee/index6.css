@@ -1,0 +1,273 @@
+/* =========================
+   LOGIN SCOPE (CỰC QUAN TRỌNG)
+========================= */
+.login-scope {
+  width: 100vw;
+  height: 100vh;
+  background: #f4f6f9;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* =========================
+   MAIN LAYOUT
+========================= */
+.login-scope .login-container {
+  min-height: 100vh;
+  display: flex;
+}
+
+/* =========================
+   LEFT PANEL
+========================= */
+.login-scope .login-left {
+  width: 50%;
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  color: #fff;
+  padding: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.login-scope .brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 60px;
+}
+
+.login-scope .brand-logo {
+  width: 48px;
+  height: 48px;
+  background: #fff;
+  color: #2563eb;
+  font-weight: bold;
+  font-size: 20px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-scope .brand-text h1 {
+  font-size: 20px;
+}
+
+.login-scope .brand-text p {
+  font-size: 13px;
+  color: #c7d2fe;
+}
+
+.login-scope .left-title {
+  font-size: 32px;
+  font-weight: bold;
+  line-height: 1.3;
+  margin-bottom: 15px;
+}
+
+.login-scope .left-desc {
+  color: #dbeafe;
+  max-width: 420px;
+  margin-bottom: 40px;
+}
+
+/* Feature */
+.login-scope .feature {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 25px;
+}
+
+.login-scope .feature-icon {
+  width: 42px;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-scope .feature-text h4 {
+  font-size: 15px;
+}
+
+.login-scope .feature-text p {
+  font-size: 13px;
+  color: #dbeafe;
+}
+
+.login-scope .copyright {
+  font-size: 13px;
+  color: #c7d2fe;
+}
+
+/* =========================
+   RIGHT PANEL
+========================= */
+.login-scope .login-right {
+  width: 50%;
+  background: #f9fafb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-scope .login-box {
+  background: #fff;
+  width: 100%;
+  max-width: 420px;
+  padding: 35px;
+  border-radius: 14px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.login-scope .login-box h2 {
+  font-size: 24px;
+  margin-bottom: 5px;
+}
+
+.login-scope .login-box .subtitle {
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+/* Demo account */
+.login-scope .demo-box {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 20px;
+  color: #1e40af;
+}
+
+/* =========================
+   FORM
+========================= */
+.login-scope .form-group {
+  margin-bottom: 18px;
+}
+
+.login-scope .form-group label {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.login-scope .input-wrapper {
+  position: relative;
+}
+
+.login-scope .input-wrapper input {
+  width: 100%;
+  padding: 10px 12px 10px 40px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  outline: none;
+  font-size: 14px;
+}
+
+.login-scope .input-wrapper input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+.login-scope .input-icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: #9ca3af;
+}
+
+/* Error */
+.login-scope .error-text {
+  color: #dc2626;
+  font-size: 14px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+/* Button */
+.login-scope .btn-login {
+  width: 100%;
+  padding: 12px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.login-scope .btn-login:hover {
+  background: #1e40af;
+}
+
+/* Divider */
+.login-scope .divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.login-scope .divider::before,
+.login-scope .divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.login-scope .divider span {
+  margin: 0 10px;
+}
+
+/* Admin button */
+.login-scope .btn-admin {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.3s;
+}
+
+.login-scope .btn-admin:hover {
+  background: #f3f4f6;
+}
+
+/* Footer */
+.login-scope .support-text {
+  text-align: center;
+  font-size: 13px;
+  margin-top: 18px;
+  color: #6b7280;
+}
+
+.login-scope .support-text span {
+  color: #2563eb;
+  cursor: pointer;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 900px) {
+  .login-scope .login-left {
+    display: none;
+  }
+
+  .login-scope .login-right {
+    width: 100%;
+  }
+}
