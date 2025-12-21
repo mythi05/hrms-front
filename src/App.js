@@ -29,18 +29,19 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
 
+  console.log('App state:', { isMobile, sidebarOpen });
+
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    const update = () => setIsMobile(mq.matches);
-    update();
-
-    if (mq.addEventListener) mq.addEventListener("change", update);
-    else mq.addListener(update);
-
-    return () => {
-      if (mq.removeEventListener) mq.removeEventListener("change", update);
-      else mq.removeListener(update);
+    const checkMobile = () => {
+      const mobile = window.innerWidth <= 767;
+      console.log('Mobile check:', window.innerWidth, mobile);
+      setIsMobile(mobile);
+      if (!mobile) setSidebarOpen(false);
     };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   useEffect(() => {
@@ -125,6 +126,7 @@ export default function App() {
           <Header
             onLogout={handleLogout}
             onOpenSidebar={() => {
+              console.log('Admin header menu button clicked, isMobile:', isMobile);
               if (isMobile) setSidebarOpen(true);
             }}
             showMenuButton={isMobile}

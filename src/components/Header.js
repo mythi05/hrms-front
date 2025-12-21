@@ -1,6 +1,8 @@
 import { Search, Bell, Mail, User, LogOut, Menu } from 'lucide-react';
 
 export function Header({ onLogout, onOpenSidebar, showMenuButton }) {
+  console.log('AdminHeader props:', { showMenuButton, onOpenSidebar: !!onOpenSidebar });
+  
   const handleLogout = () => {
     const confirmed = window.confirm("Bạn có chắc muốn đăng xuất không?");
     if (confirmed && onLogout) {
@@ -15,7 +17,10 @@ export function Header({ onLogout, onOpenSidebar, showMenuButton }) {
           <button
             type="button"
             aria-label="Open sidebar"
-            onClick={() => onOpenSidebar && onOpenSidebar()}
+            onClick={() => {
+              console.log('AdminHeader menu button clicked!');
+              onOpenSidebar && onOpenSidebar();
+            }}
             className="mr-3 inline-flex items-center justify-center rounded-lg p-2 hover:bg-gray-100"
           >
             <Menu size={20} className="text-black" />

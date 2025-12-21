@@ -1,6 +1,6 @@
 import axiosInstance from "./axios";
 
-const API_BASE_URL = "/leave-requests"; // baseURL = https://app-f9bfc784-6639-4f0e-919c-b5ed407f3a5b.cleverapps.io/api
+const API_BASE_URL = "/leave-requests"; // baseURL = http://localhost:8080/api
 
 // ========== EMPLOYEE ==========
 
