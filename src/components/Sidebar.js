@@ -48,7 +48,7 @@ export function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed, 
     { id: 'recruitment', label: 'Tuyển dụng', icon: UserPlus },
     { id: 'performance', label: 'Hiệu suất', icon: TrendingUp },
     { id: 'training', label: 'Đào tạo', icon: GraduationCap },
-    { id: 'reports', label: 'Báo cáo', icon: FileText },
+    { id: 'reports', label: 'Quản lý tài liệu', icon: FileText },
     { id: 'settings', label: 'Cài đặt', icon: Settings },
   ];
 

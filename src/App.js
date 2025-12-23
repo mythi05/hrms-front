@@ -21,6 +21,7 @@ import DepartmentDetails from "./components/admin/DepartmentDetails";
 import AdminTaskPage from "./components/admin/AdminTaskPage";
 import AdminPerformancePage from "./components/admin/AdminPerformancePage";
 import AdminSettings from "./components/admin/AdminSettings";
+import AdminDocuments from "./components/admin/AdminDocuments";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState("dashboard");
@@ -80,7 +81,7 @@ export default function App() {
         case "attendance":
           return <EmployeeAttendanceAdmin />;
         case "leave":
-          return <AdminLeavePage/>;
+          return <AdminLeavePage />;
         case "payroll":
           return <AdminPayrollPage />;
         case "tasks":
@@ -92,7 +93,7 @@ export default function App() {
         case "training":
           return <div>Đào tạo</div>;
         case "reports":
-          return <div>Báo cáo</div>;
+          return <AdminDocuments />;
         case "settings":
           return <AdminSettings />;
         default:
@@ -154,7 +155,7 @@ export default function App() {
 
       {/* Admin login */}
       <Route path="/admin/login" element={<AdminLogin />} />
-      
+
       {/* Department Details - Separate Route */}
       <Route
         path="/admin/departments/:id"
@@ -164,7 +165,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      
+
       {/* Admin portal */}
       <Route
         path="/admin/*"

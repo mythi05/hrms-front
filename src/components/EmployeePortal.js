@@ -10,6 +10,7 @@ import EmployeePerformance from './employee/EmployeePerformance';
 import EmployeeNotifications from './employee/EmployeeNotifications';
 import EmployeeSettings from './employee/EmployeeSettings';
 import { EmployeeSidebar } from './employee/EmployeeSidebar';
+import EmployeeDocuments from './employee/EmployeeDocuments';
 import { Menu } from 'lucide-react';
 
 export default function EmployeePortal() {
@@ -66,7 +67,7 @@ export default function EmployeePortal() {
         setMobileOpen={setMobileSidebarOpen}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <EmployeeHeader 
+        <EmployeeHeader
           isMobile={isMobile}
           onOpenSidebar={() => {
             console.log('Employee header menu button clicked, isMobile:', isMobile);
@@ -84,6 +85,7 @@ export default function EmployeePortal() {
           {currentPage === 'tasks' && <EmployeeTasks />}
           {currentPage === 'performance' && <EmployeePerformance />}
           {currentPage === 'notifications' && <EmployeeNotifications />}
+          {currentPage === 'documents' && <EmployeeDocuments />}
           {currentPage === 'settings' && <EmployeeSettings />}
           {currentPage === 'training' && (
             <div className="bg-white rounded-lg shadow p-4 md:p-8">
@@ -91,12 +93,7 @@ export default function EmployeePortal() {
               <p className="text-gray-600 text-sm md:text-base">Danh sách khóa học đào tạo sẽ hiển thị ở đây</p>
             </div>
           )}
-          {currentPage === 'documents' && (
-            <div className="bg-white rounded-lg shadow p-4 md:p-8">
-              <h2 className="mb-4 text-lg md:text-xl">Tài liệu</h2>
-              <p className="text-gray-600 text-sm md:text-base">Tài liệu công ty, quy định nội bộ</p>
-            </div>
-          )}
+         
         </main>
       </div>
     </div>

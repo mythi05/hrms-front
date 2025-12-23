@@ -1,196 +1,350 @@
 import React, { useState } from 'react';
-import { User, Bell, Lock, Globe, Palette, HelpCircle, ChevronRight } from 'lucide-react';
+import '../../styles/settings.css';
 
-export default function EmployeeSettings() {
-  const [activeTab, setActiveTab] = useState('profile');
-
-  const menuItems = [
-    { id: 'profile', label: 'Thông tin cá nhân', icon: User },
-    { id: 'notifications', label: 'Thông báo', icon: Bell },
-    { id: 'security', label: 'Bảo mật', icon: Lock },
-    { id: 'language', label: 'Ngôn ngữ', icon: Globe },
-    { id: 'appearance', label: 'Giao diện', icon: Palette },
-    { id: 'help', label: 'Trợ giúp', icon: HelpCircle },
-  ];
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'profile':
-        return (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Thông tin cá nhân</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    defaultValue="Nguyễn Văn A"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    defaultValue="a.nguyen@company.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
-                  <input
-                    type="tel"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    defaultValue="0123456789"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phòng ban</label>
-                  <input
-                    type="text"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                    defaultValue="Phòng Kinh doanh"
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="mt-6">
-                <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                  Lưu thay đổi
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      
-      case 'notifications':
-        return (
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold mb-4">Cài đặt thông báo</h3>
-            <div className="space-y-4">
-              <label className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                <div>
-                  <div className="font-medium">Email thông báo</div>
-                  <div className="text-sm text-gray-500">Nhận thông báo qua email</div>
-                </div>
-                <input type="checkbox" className="w-5 h-5 text-green-600" defaultChecked />
-              </label>
-              <label className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                <div>
-                  <div className="font-medium">Thông báo đẩy</div>
-                  <div className="text-sm text-gray-500">Nhận thông báo trên trình duyệt</div>
-                </div>
-                <input type="checkbox" className="w-5 h-5 text-green-600" defaultChecked />
-              </label>
-              <label className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                <div>
-                  <div className="font-medium">Thông báo lương</div>
-                  <div className="text-sm text-gray-500">Nhận thông báo khi có bảng lương mới</div>
-                </div>
-                <input type="checkbox" className="w-5 h-5 text-green-600" defaultChecked />
-              </label>
-              <label className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
-                <div>
-                  <div className="font-medium">Thông báo nghỉ phép</div>
-                  <div className="text-sm text-gray-500">Nhận thông báo về trạng thái nghỉ phép</div>
-                </div>
-                <input type="checkbox" className="w-5 h-5 text-green-600" />
-              </label>
-            </div>
-          </div>
-        );
-      
-      case 'security':
-        return (
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold mb-4">Bảo mật</h3>
-            <div className="space-y-4">
-              <div className="p-4 border border-gray-200 rounded-lg">
-                <div className="font-medium mb-2">Đổi mật khẩu</div>
-                <div className="space-y-3">
-                  <input
-                    type="password"
-                    placeholder="Mật khẩu hiện tại"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Mật khẩu mới"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Xác nhận mật khẩu mới"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  />
-                </div>
-                <button className="mt-3 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                  Cập nhật mật khẩu
-                </button>
-              </div>
-              <div className="p-4 border border-gray-200 rounded-lg">
-                <div className="font-medium mb-2">Xác thực hai yếu tố</div>
-                <div className="text-sm text-gray-500 mb-3">Tăng cường bảo mật cho tài khoản của bạn</div>
-                <button className="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors">
-                  Thiết lập 2FA
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      
-      default:
-        return (
-          <div className="text-center py-12">
-            <div className="text-gray-500">
-              <p>Tính năng đang được phát triển</p>
-              <p className="text-sm mt-2">Vui lòng quay lại sau</p>
-            </div>
-          </div>
-        );
-    }
-  };
+const EmployeeSettings = () => {
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(true);
+  const [leaveNotifications, setLeaveNotifications] = useState(true);
+  const [payrollNotifications, setPayrollNotifications] = useState(true);
 
   return (
-    <div className="bg-white rounded-lg shadow">
-      <div className="p-6 border-b border-gray-200">
-        <h2 className="text-2xl font-bold text-gray-800">Cài đặt</h2>
-        <p className="text-gray-600 mt-1">Quản lý cài đặt tài khoản và hệ thống</p>
-      </div>
-      
-      <div className="flex">
-        {/* Sidebar menu */}
-        <div className="w-64 bg-gray-50 p-4 border-r border-gray-200">
-          <nav className="space-y-1">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = activeTab === item.id;
-              
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                    isActive
-                      ? 'bg-green-100 text-green-700 border-r-2 border-green-600'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  }`}
-                >
-                  <Icon size={18} />
-                  <span className="flex-1 text-left">{item.label}</span>
-                  {isActive && <ChevronRight size={16} />}
-                </button>
-              );
-            })}
-          </nav>
+    <div className="settings-content">
+      {/* Profile Information */}
+      <div className="settings-section">
+        <div className="section-header">
+          <div className="section-icon blue">👤</div>
+          <div>
+            <h2>Thông tin cá nhân</h2>
+            <p>Cập nhật thông tin hồ sơ của bạn</p>
+          </div>
         </div>
-        
-        {/* Content */}
-        <div className="flex-1 p-6">
-          {renderContent()}
+
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <div
+            style={{
+              width: '100px',
+              height: '100px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '36px',
+              fontWeight: '600',
+              marginBottom: '12px'
+            }}
+          >
+            NV
+          </div>
+          <div>
+            <button className="setting-button">Thay đổi ảnh</button>
+          </div>
+        </div>
+
+        <div className="two-column-grid">
+          <div className="form-group">
+            <label>Họ và tên</label>
+            <input type="text" defaultValue="Nguyễn Văn A" />
+          </div>
+          <div className="form-group">
+            <label>Mã nhân viên</label>
+            <input
+              type="text"
+              defaultValue="NV001"
+              disabled
+              style={{ background: '#f5f5f5' }}
+            />
+          </div>
+        </div>
+
+        <div className="two-column-grid">
+          <div className="form-group">
+            <label>Email</label>
+            <input type="email" defaultValue="nhanvien@company.com" />
+          </div>
+          <div className="form-group">
+            <label>Số điện thoại</label>
+            <input type="tel" defaultValue="0912345678" />
+          </div>
+        </div>
+
+        <div className="two-column-grid">
+          <div className="form-group">
+            <label>Phòng ban</label>
+            <input
+              type="text"
+              defaultValue="Phòng Công nghệ"
+              disabled
+              style={{ background: '#f5f5f5' }}
+            />
+          </div>
+          <div className="form-group">
+            <label>Chức vụ</label>
+            <input
+              type="text"
+              defaultValue="Nhân viên"
+              disabled
+              style={{ background: '#f5f5f5' }}
+            />
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>Địa chỉ</label>
+          <textarea defaultValue="456 Đường XYZ, Quận Tân Bình, TP. Hồ Chí Minh" />
+        </div>
+
+        <div className="form-actions">
+          <button className="setting-button primary">Cập nhật thông tin</button>
+          <button className="setting-button">Hủy</button>
+        </div>
+      </div>
+
+      {/* Account Security */}
+      <div className="settings-section">
+        <div className="section-header">
+          <div className="section-icon red">🔐</div>
+          <div>
+            <h2>Bảo mật tài khoản</h2>
+            <p>Quản lý mật khẩu và bảo mật</p>
+          </div>
+        </div>
+
+        <div className="alert-box warning">
+          <span>⚠️</span>
+          <span>Bạn nên đổi mật khẩu định kỳ để bảo mật tài khoản</span>
+        </div>
+
+        <div className="form-group">
+          <label>Mật khẩu hiện tại</label>
+          <input type="password" placeholder="Nhập mật khẩu hiện tại" />
+        </div>
+        <div className="form-group">
+          <label>Mật khẩu mới</label>
+          <input type="password" placeholder="Nhập mật khẩu mới" />
+        </div>
+        <div className="form-group">
+          <label>Xác nhận mật khẩu mới</label>
+          <input type="password" placeholder="Nhập lại mật khẩu mới" />
+        </div>
+
+        <div className="form-actions">
+          <button className="setting-button primary">Đổi mật khẩu</button>
+        </div>
+
+        <div style={{ marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #f0f0f0' }}>
+          <div className="setting-item">
+            <div className="setting-info">
+              <h3>Lịch sử đăng nhập</h3>
+              <p>Xem các thiết bị đã đăng nhập gần đây</p>
+            </div>
+            <button className="setting-button">Xem chi tiết</button>
+          </div>
+
+          <div className="setting-item">
+            <div className="setting-info">
+              <h3>Đăng xuất tất cả thiết bị</h3>
+              <p>Đăng xuất khỏi tất cả các thiết bị khác</p>
+            </div>
+            <button className="setting-button danger">Đăng xuất</button>
+          </div>
+        </div>
+      </div>
+
+      {/* Notification Settings */}
+      <div className="settings-section">
+        <div className="section-header">
+          <div className="section-icon purple">🔔</div>
+          <div>
+            <h2>Thông báo</h2>
+            <p>Cấu hình thông báo và nhắc nhở</p>
+          </div>
+        </div>
+
+        <div className="setting-item">
+          <div className="setting-info">
+            <h3>Thông báo email</h3>
+            <p>Nhận thông báo qua email</p>
+          </div>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={emailNotifications}
+              onChange={(e) => setEmailNotifications(e.target.checked)}
+            />
+            <span className="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div className="setting-item">
+          <div className="setting-info">
+            <h3>Thông báo đẩy</h3>
+            <p>Nhận thông báo đẩy trên trình duyệt</p>
+          </div>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={pushNotifications}
+              onChange={(e) => setPushNotifications(e.target.checked)}
+            />
+            <span className="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div className="setting-item">
+          <div className="setting-info">
+            <h3>Thông báo nghỉ phép</h3>
+            <p>Nhận thông báo về trạng thái đơn nghỉ phép</p>
+          </div>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={leaveNotifications}
+              onChange={(e) => setLeaveNotifications(e.target.checked)}
+            />
+            <span className="toggle-slider"></span>
+          </label>
+        </div>
+
+        <div className="setting-item">
+          <div className="setting-info">
+            <h3>Thông báo lương</h3>
+            <p>Nhận thông báo về bảng lương hàng tháng</p>
+          </div>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={payrollNotifications}
+              onChange={(e) => setPayrollNotifications(e.target.checked)}
+            />
+            <span className="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+
+      {/* Work Schedule */}
+      <div className="settings-section">
+        <div className="section-header">
+          <div className="section-icon green">📅</div>
+          <div>
+            <h2>Lịch làm việc</h2>
+            <p>Cài đặt ca làm và lịch trình</p>
+          </div>
+        </div>
+
+        <div className="alert-box info">
+          <span>ℹ️</span>
+          <span>Lịch làm việc của bạn: Thứ 2 - Thứ 6, 8:00 - 17:00</span>
+        </div>
+
+        <div className="setting-item">
+          <div className="setting-info">
+            <h3>Ca làm việc hiện tại</h3>
+            <p>Ca hành chính (8:00 - 17:00)</p>
+          </div>
+          <button className="setting-button">Xem chi tiết</button>
+        </div>
+
+        <div className="setting-item">
+          <div className="setting-info">
+            <h3>Số ngày phép còn lại</h3>
+            <p>Bạn còn 12 ngày phép năm</p>
+          </div>
+          <button className="setting-button">Đăng ký nghỉ</button>
+        </div>
+
+        <div className="setting-item">
+          <div className="setting-info">
+            <h3>Lịch sử chấm công</h3>
+            <p>Xem lịch sử chấm công của bạn</p>
+          </div>
+          <button className="setting-button">Xem lịch sử</button>
+        </div>
+      </div>
+
+      {/* Preferences */}
+      <div className="settings-section">
+        <div className="section-header">
+          <div className="section-icon orange">⚙️</div>
+          <div>
+            <h2>Tùy chọn</h2>
+            <p>Cài đặt hiển thị và ngôn ngữ</p>
+          </div>
+        </div>
+
+        <div className="setting-item">
+          <div className="setting-info">
+            <h3>Ngôn ngữ</h3>
+            <p>Chọn ngôn ngữ hiển thị</p>
+          </div>
+          <select className="setting-button" style={{ width: '150px' }}>
+            <option>Tiếng Việt</option>
+            <option>English</option>
+          </select>
+        </div>
+
+        <div className="setting-item">
+          <div className="setting-info">
+            <h3>Giao diện</h3>
+            <p>Chọn chế độ hiển thị</p>
+          </div>
+          <select className="setting-button" style={{ width: '150px' }}>
+            <option>Sáng</option>
+            <option>Tối</option>
+            <option>Tự động</option>
+          </select>
+        </div>
+
+        <div className="setting-item">
+          <div className="setting-info">
+            <h3>Định dạng ngày</h3>
+            <p>Chọn định dạng hiển thị ngày tháng</p>
+          </div>
+          <select className="setting-button" style={{ width: '150px' }}>
+            <option>DD/MM/YYYY</option>
+            <option>MM/DD/YYYY</option>
+            <option>YYYY-MM-DD</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Support */}
+      <div className="settings-section">
+        <div className="section-header">
+          <div className="section-icon blue">💬</div>
+          <div>
+            <h2>Hỗ trợ</h2>
+            <p>Liên hệ và trợ giúp</p>
+          </div>
+        </div>
+
+        <div className="setting-item">
+          <div className="setting-info">
+            <h3>Trung tâm trợ giúp</h3>
+            <p>Tìm câu trả lời cho các câu hỏi thường gặp</p>
+          </div>
+          <button className="setting-button">Truy cập</button>
+        </div>
+
+        <div className="setting-item">
+          <div className="setting-info">
+            <h3>Liên hệ hỗ trợ</h3>
+            <p>Gửi yêu cầu hỗ trợ đến bộ phận IT</p>
+          </div>
+          <button className="setting-button">Liên hệ</button>
+        </div>
+
+        <div className="setting-item">
+          <div className="setting-info">
+            <h3>Phản hồi</h3>
+            <p>Gửi ý kiến đóng góp về hệ thống</p>
+          </div>
+          <button className="setting-button">Gửi phản hồi</button>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default EmployeeSettings;
