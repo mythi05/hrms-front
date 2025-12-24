@@ -1,208 +1,344 @@
-import React, { useState } from 'react';
-import '../../styles/documents.css';
+import React, { useEffect, useRef, useState } from "react";
+import "../../styles/documents.css";
+import axiosInstance from "../../api/axios";
 
 export const AdminDocuments = () => {
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const documents = [
-    { id: '1', name: 'Quy chế làm việc 2024.pdf', type: 'pdf', size: '2.5 MB', date: '20/12/2024', category: 'company', uploadedBy: 'Admin', isNew: true },
-    { id: '2', name: 'Hợp đồng lao động mẫu.docx', type: 'word', size: '1.2 MB', date: '18/12/2024', category: 'hr', uploadedBy: 'HR Manager' },
-    { id: '3', name: 'Bảng lương tháng 12.xlsx', type: 'excel', size: '3.8 MB', date: '15/12/2024', category: 'finance', uploadedBy: 'Kế toán', isImportant: true },
-    { id: '4', name: 'Tài liệu đào tạo nhân viên mới', type: 'folder', size: '15 files', date: '10/12/2024', category: 'training', uploadedBy: 'Admin' },
-    { id: '5', name: 'Chính sách phúc lợi.pdf', type: 'pdf', size: '1.8 MB', date: '05/12/2024', category: 'policies', uploadedBy: 'HR Manager' },
-    { id: '6', name: 'Logo công ty.png', type: 'image', size: '450 KB', date: '01/12/2024', category: 'company', uploadedBy: 'Marketing' },
-    { id: '7', name: 'Báo cáo tài chính Q4.xlsx', type: 'excel', size: '4.2 MB', date: '28/11/2024', category: 'finance', uploadedBy: 'Kế toán', isImportant: true },
-    { id: '8', name: 'Quy trình tuyển dụng.docx', type: 'word', size: '980 KB', date: '25/11/2024', category: 'hr', uploadedBy: 'HR Manager' },
-  ];
-
-  const categories = [
-    { id: 'all', name: 'Tất cả tài liệu', icon: '📁', count: documents.length },
-    { id: 'company', name: 'Công ty', icon: '🏢', count: documents.filter(d => d.category === 'company').length },
-    { id: 'hr', name: 'Nhân sự', icon: '👥', count: documents.filter(d => d.category === 'hr').length },
-    { id: 'finance', name: 'Tài chính', icon: '💰', count: documents.filter(d => d.category === 'finance').length },
-    { id: 'training', name: 'Đào tạo', icon: '📚', count: documents.filter(d => d.category === 'training').length },
-    { id: 'policies', name: 'Chính sách', icon: '📋', count: documents.filter(d => d.category === 'policies').length },
-  ];
-
-  const filteredDocuments = documents.filter(doc => {
-    const matchesCategory = activeCategory === 'all' || doc.category === activeCategory;
-    const matchesSearch = doc.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+  const [viewMode, setViewMode] = useState("grid");
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [documents, setDocuments] = useState([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    newDocs: 0,
+    important: 0
   });
+  const [loading, setLoading] = useState(false);
 
-  const getDocumentIcon = (type) => {
-    switch (type) {
-      case 'pdf': return '📄';
-      case 'word': return '📝';
-      case 'excel': return '📊';
-      case 'image': return '🖼️';
-      case 'folder': return '📁';
-      default: return '📄';
+  const fileInputRef = useRef(null);
+  const [uploadVisibility, setUploadVisibility] = useState('PUBLIC');
+  const [uploadUser, setUploadUser] = useState('');
+
+  /* ================= LOAD DOCUMENTS ================= */
+  useEffect(() => {
+    fetchDocuments();
+  }, [activeCategory, searchQuery]);
+
+  const fetchDocuments = async () => {
+    setLoading(true);
+    try {
+      const res = await axiosInstance.get("/documents", {
+        params: {
+          category: activeCategory,
+          search: searchQuery
+        }
+      });
+      setDocuments(res.data);
+    } catch (err) {
+      console.error("Load documents error", err);
+    }
+    setLoading(false);
+  };
+
+  /* ================= LOAD STATS ================= */
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      const res = await axiosInstance.get("/documents/stats");
+      setStats(res.data);
+    } catch (err) {
+      console.error("Load stats error", err);
     }
   };
 
+  /* ================= UPLOAD ================= */
+  const handleUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    let visibility = uploadVisibility;
+    if (visibility === 'USER' && uploadUser) visibility = `USER:${uploadUser}`;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append(
+      "category",
+      activeCategory === "all" ? "company" : activeCategory
+    );
+    formData.append("uploadedBy", "Admin");
+    formData.append("visibility", visibility);
+
+    try {
+      await axiosInstance.post("/documents/upload", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      fetchDocuments();
+      fetchStats();
+    } catch (err) {
+      console.error("Upload error", err);
+    }
+  };
+
+  /* ================= DELETE ================= */
+  const deleteFile = async (id) => {
+    if (!window.confirm("Xóa tài liệu này?")) return;
+    try {
+      await axiosInstance.delete(`/documents/${id}`);
+      fetchDocuments();
+      fetchStats();
+    } catch (err) {
+      console.error("Delete error", err);
+    }
+  };
+
+  /* ================= DOWNLOAD ================= */
+const downloadFile = async (id) => {
+  try {
+    const res = await axiosInstance.get(
+      `/documents/${id}/download`,
+      { responseType: "blob" }
+    );
+
+    const blob = new Blob([res.data], {
+      type: res.headers["content-type"] || "application/octet-stream"
+    });
+
+    const url = window.URL.createObjectURL(blob);
+
+    let filename = "file";
+    const cd = res.headers["content-disposition"];
+    if (cd) {
+      const match = cd.match(/filename="?([^";]+)"?/);
+      if (match) filename = match[1];
+    }
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  } catch (err) {
+    if (err.response?.status === 401) {
+      alert("Bạn cần đăng nhập để tải tài liệu");
+      window.location.href = "/login";
+      return;
+    }
+    if (err.response?.status === 403) {
+      alert("Bạn không có quyền tải tài liệu này");
+      return;
+    }
+    console.error("Download error", err);
+  }
+};
+
+
+const viewFile = async (id) => {
+  try {
+    const res = await axiosInstance.get(
+      `/documents/${id}/view`,
+      { responseType: "blob" }
+    );
+
+    const contentType =
+      res.headers["content-type"] || "application/octet-stream";
+
+    const blob = new Blob([res.data], { type: contentType });
+    const url = window.URL.createObjectURL(blob);
+
+    window.open(url, "_blank");
+
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  } catch (err) {
+    if (err.response?.status === 401) {
+      alert("Bạn cần đăng nhập để xem tài liệu");
+      window.location.href = "/login";
+      return;
+    }
+    if (err.response?.status === 403) {
+      alert("Bạn không có quyền xem tài liệu này");
+      return;
+    }
+    console.error("View error", err);
+  }
+};
+
+
+  /* ================= ICON ================= */
+  const getDocumentIcon = (type) => {
+    switch (type) {
+      case "pdf":
+        return "📄";
+      case "word":
+        return "📝";
+      case "excel":
+        return "📊";
+      case "image":
+        return "🖼️";
+      case "folder":
+        return "📁";
+      default:
+        return "📄";
+    }
+  };
+
+  const categories = [
+    { id: "all", name: "Tất cả tài liệu", icon: "📁" },
+    { id: "company", name: "Công ty", icon: "🏢" },
+    { id: "hr", name: "Nhân sự", icon: "👥" },
+    { id: "finance", name: "Tài chính", icon: "💰" },
+    { id: "training", name: "Đào tạo", icon: "📚" },
+    { id: "policies", name: "Chính sách", icon: "📋" }
+  ];
+
   return (
     <div className="documents-container">
+      {/* ================= HEADER ================= */}
       <div className="documents-header">
         <h1>Quản lý tài liệu</h1>
 
         <div className="header-actions">
           <div className="search-box">
-            <span className="search-icon">🔍</span>
+            🔍
             <input
-              type="text"
               placeholder="Tìm kiếm tài liệu..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          <button className="upload-btn">
-            <span>⬆️</span>
-            <span>Tải lên</span>
-          </button>
+          <div style={{display: 'flex', alignItems: 'center', gap: 8}}>
+            <select value={uploadVisibility} onChange={e => setUploadVisibility(e.target.value)}>
+              <option value="PUBLIC">Công khai (Tất cả nhân viên)</option>
+              <option value="ROLE_HR">Chỉ HR</option>
+              <option value="ROLE_ADMIN">Chỉ Admin</option>
+              <option value="USER">Một người cụ thể</option>
+            </select>
+            {uploadVisibility === 'USER' && (
+              <input placeholder="username" value={uploadUser} onChange={e => setUploadUser(e.target.value)} />
+            )}
 
-          <button className="filter-btn">
-            <span>⚙️</span>
-            <span>Bộ lọc</span>
-          </button>
+            <button
+              className="upload-btn"
+              onClick={() => fileInputRef.current.click()}
+            >
+              ⬆️ Tải lên
+            </button>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              hidden
+              onChange={handleUpload}
+            />
+          </div>
         </div>
       </div>
 
+      {/* ================= STATS ================= */}
       <div className="stats-row">
         <div className="stat-box">
-          <h4>156</h4>
+          <h4>{stats.total}</h4>
           <p>Tổng tài liệu</p>
         </div>
-        <div className="stat-box blue">
-          <h4>2.3 GB</h4>
-          <p>Dung lượng sử dụng</p>
-        </div>
         <div className="stat-box green">
-          <h4>12</h4>
-          <p>Tài liệu mới tuần này</p>
+          <h4>{stats.newDocs}</h4>
+          <p>Tài liệu mới</p>
         </div>
         <div className="stat-box orange">
-          <h4>45</h4>
-          <p>Tài liệu được chia sẻ</p>
+          <h4>{stats.important}</h4>
+          <p>Tài liệu quan trọng</p>
         </div>
       </div>
 
       <div className="documents-layout">
+        {/* ================= SIDEBAR ================= */}
         <aside className="sidebar">
           <h3>Danh mục</h3>
           <ul className="category-list">
-            {categories.map(category => (
+            {categories.map((c) => (
               <li
-                key={category.id}
-                className={`category-item ${activeCategory === category.id ? 'active' : ''}`}
-                onClick={() => setActiveCategory(category.id)}
+                key={c.id}
+                className={activeCategory === c.id ? "active" : ""}
+                onClick={() => setActiveCategory(c.id)}
               >
-                <div>
-                  <span className="category-icon">{category.icon}</span>
-                  {category.name}
-                </div>
-                <span className="category-count">{category.count}</span>
+                {c.icon} {c.name}
               </li>
             ))}
           </ul>
         </aside>
 
+        {/* ================= CONTENT ================= */}
         <main className="documents-content">
-          <div className="breadcrumb">
-            <span className="breadcrumb-item">Tài liệu</span>
-            <span className="breadcrumb-separator">›</span>
-            <span className="breadcrumb-item">
-              {categories.find(c => c.id === activeCategory)?.name || 'Tất cả'}
-            </span>
-          </div>
-
-          <div className="upload-zone">
-            <div className="upload-zone-icon">📤</div>
-            <h3>Kéo thả tài liệu vào đây để tải lên</h3>
-            <p>hoặc nhấp để chọn tệp từ máy tính</p>
-          </div>
-
           <div className="view-toggle">
-            <div className="view-buttons">
-              <button
-                className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                onClick={() => setViewMode('grid')}
-              >
-                ⊞ Lưới
-              </button>
-              <button
-                className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
-                onClick={() => setViewMode('list')}
-              >
-                ☰ Danh sách
-              </button>
-            </div>
-
-            <select className="sort-select">
-              <option>Sắp xếp: Mới nhất</option>
-              <option>Sắp xếp: Tên A-Z</option>
-              <option>Sắp xếp: Kích thước</option>
-            </select>
+            <button
+              className={viewMode === "grid" ? "active" : ""}
+              onClick={() => setViewMode("grid")}
+            >
+              ⊞ Lưới
+            </button>
+            <button
+              className={viewMode === "list" ? "active" : ""}
+              onClick={() => setViewMode("list")}
+            >
+              ☰ Danh sách
+            </button>
           </div>
 
-          {filteredDocuments.length === 0 ? (
-            <div className="empty-state">
-              <div className="empty-state-icon">📭</div>
-              <h3>Không tìm thấy tài liệu</h3>
-              <p>Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác</p>
-            </div>
-          ) : viewMode === 'grid' ? (
+          {loading ? (
+            <p>Đang tải...</p>
+          ) : documents.length === 0 ? (
+            <div className="empty-state">📭 Không có tài liệu</div>
+          ) : viewMode === "grid" ? (
             <div className="documents-grid">
-              {filteredDocuments.map(doc => (
+              {documents.map((doc) => (
                 <div key={doc.id} className="document-card">
-                  <div className="document-actions">
-                    <button className="action-menu-btn">⋮</button>
+                  <div className={`document-icon ${doc.fileType}`}>
+                    {getDocumentIcon(doc.fileType)}
                   </div>
 
-                  <div className={`document-icon ${doc.type}`}>
-                    {getDocumentIcon(doc.type)}
-                  </div>
-
-                  <h3 className="document-name">
+                  <h3>
                     {doc.name}
                     {doc.isNew && <span className="tag new">Mới</span>}
-                    {doc.isImportant && <span className="tag important">Quan trọng</span>}
+                    {doc.isImportant && (
+                      <span className="tag important">Quan trọng</span>
+                    )}
                   </h3>
 
-                  <p className="document-meta">{doc.size} • {doc.date}</p>
-                  <p className="document-meta">Bởi: {doc.uploadedBy}</p>
+                  <p>
+                    {(doc.fileSize / 1024 / 1024).toFixed(2)} MB •{" "}
+                    {new Date(doc.createdAt).toLocaleDateString()}
+                  </p>
+
+                  <p>Bởi: {doc.uploadedBy}</p>
+
+                  <div className="card-actions">
+                    <button onClick={() => viewFile(doc.id)} title="Xem">👁️</button>
+                    <button onClick={() => downloadFile(doc.id)} title="Tải về">⬇️</button>
+                    <button onClick={() => deleteFile(doc.id)} title="Xóa">🗑️</button>
+                  </div>
                 </div>
               ))}
             </div>
           ) : (
             <div className="documents-list">
-              {filteredDocuments.map(doc => (
+              {documents.map((doc) => (
                 <div key={doc.id} className="document-row">
-                  <div className={`row-icon ${doc.type}`}>
-                    {getDocumentIcon(doc.type)}
-                  </div>
-
-                  <div className="row-info">
-                    <h4>
-                      {doc.name}
-                      {doc.isNew && <span className="tag new">Mới</span>}
-                      {doc.isImportant && <span className="tag important">Quan trọng</span>}
-                    </h4>
-                    <p>Bởi: {doc.uploadedBy}</p>
-                  </div>
-
-                  <div className="row-size">{doc.size}</div>
-                  <div className="row-date">{doc.date}</div>
-
-                  <div className="row-actions">
-                    <button className="action-btn" title="Tải xuống">⬇️</button>
-                    <button className="action-btn" title="Chia sẻ">🔗</button>
-                    <button className="action-btn" title="Chỉnh sửa">✏️</button>
-                    <button className="action-btn delete" title="Xóa">🗑️</button>
-                  </div>
+                  <span>{getDocumentIcon(doc.fileType)}</span>
+                  <span>{doc.name}</span>
+                  <span>{doc.uploadedBy}</span>
+                  <span>
+                    {(doc.fileSize / 1024 / 1024).toFixed(2)} MB
+                  </span>
+                  <span>
+                    {new Date(doc.createdAt).toLocaleDateString()}
+                  </span>
+                  <button onClick={() => viewFile(doc.id)} title="Xem">👁️</button>
+                  <button onClick={() => downloadFile(doc.id)} title="Tải về">⬇️</button>
+                  <button onClick={() => deleteFile(doc.id)} title="Xóa">🗑️</button>
                 </div>
               ))}
             </div>

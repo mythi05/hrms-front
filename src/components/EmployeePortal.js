@@ -86,6 +86,9 @@ export default function EmployeePortal() {
           {currentPage === 'performance' && <EmployeePerformance />}
           {currentPage === 'notifications' && <EmployeeNotifications />}
           {currentPage === 'documents' && <EmployeeDocuments />}
+          {currentPage === 'performance' && <EmployeePerformance />}
+
+
           {currentPage === 'settings' && <EmployeeSettings />}
           {currentPage === 'training' && (
             <div className="bg-white rounded-lg shadow p-4 md:p-8">
@@ -93,7 +96,7 @@ export default function EmployeePortal() {
               <p className="text-gray-600 text-sm md:text-base">Danh sách khóa học đào tạo sẽ hiển thị ở đây</p>
             </div>
           )}
-         
+
         </main>
       </div>
     </div>

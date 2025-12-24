@@ -174,17 +174,7 @@ export default function EmployeeAttendanceAdmin() {
     }
   };
 
-  const handleDeleteAll = async () => {
-    if (!window.confirm("⚠️ CẢNH BÁO: Bạn có chắc muốn xóa TẤT CẢ dữ liệu chấm công? Hành động này không thể hoàn tác!")) return;
-    try {
-      await adminDeleteAllAttendance();
-      fetchAllAttendance(); // Reload lại data
-      alert("✅ Đã xóa tất cả dữ liệu chấm công thành công!");
-    } catch (err) {
-      console.error("Lỗi khi xóa tất cả:", err);
-      alert("❌ Không thể xóa dữ liệu. Vui lòng thử lại.");
-    }
-  };
+  
 
   const handleEdit = (record) => {
     // Logic mở form/modal chỉnh sửa
@@ -235,13 +225,7 @@ export default function EmployeeAttendanceAdmin() {
           <Plus size={18} />
           Thêm Bản ghi
         </button>
-        <button
-          onClick={handleDeleteAll}
-          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition flex items-center gap-2"
-        >
-          <Trash2 size={18} />
-          Xóa Tất Cả
-        </button>
+ 
       </div>
 
       {/* QR Attendance Management */}

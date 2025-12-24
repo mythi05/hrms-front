@@ -17,11 +17,11 @@ import { useState, useEffect } from 'react';
 
 export function EmployeeSidebar({ currentPage, setCurrentPage, collapsed, setCollapsed, isMobile, mobileOpen, setMobileOpen }) {
   const navigate = useNavigate();
-  
-  console.log('EmployeeSidebar state:', { 
-    isMobile, 
-    mobileOpen, 
-    currentPage, 
+
+  console.log('EmployeeSidebar state:', {
+    isMobile,
+    mobileOpen,
+    currentPage,
     setMobileOpen: typeof setMobileOpen
   });
 
@@ -33,19 +33,20 @@ export function EmployeeSidebar({ currentPage, setCurrentPage, collapsed, setCol
     { id: 'payroll', label: 'Lương', icon: DollarSign },
     { id: 'training', label: 'Đào tạo', icon: GraduationCap },
     { id: 'tasks', label: 'Công việc', icon: FileText },
-    { id: 'documents', label: 'Tài liệu', icon: Calendar },
+    { id: 'performance', label: 'Hiệu suất', icon: Calendar },
+    { id: 'documents', label: 'Tài liệu', icon: FileText },
     { id: 'settings', label: 'Cài đặt', icon: Settings },
   ];
 
-const handleLogout = () => {
-  const confirmLogout = window.confirm("Bạn có chắc muốn đăng xuất không?");
-  if (confirmLogout) {
-    // Xóa token và user info
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login'); // redirect về login Employee
-  }
-};
+  const handleLogout = () => {
+    const confirmLogout = window.confirm("Bạn có chắc muốn đăng xuất không?");
+    if (confirmLogout) {
+      // Xóa token và user info
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate('/login'); // redirect về login Employee
+    }
+  };
 
 
   const drawerClass = isMobile
@@ -67,11 +68,11 @@ const handleLogout = () => {
           className="fixed inset-0 z-40 bg-black/40"
         />
       )}
-      <div 
+      <div
         className={drawerClass}
         style={{
-          background: isMobile 
-            ? 'linear-gradient(to bottom, #15803d, #14532d)' 
+          background: isMobile
+            ? 'linear-gradient(to bottom, #15803d, #14532d)'
             : undefined,
           transform: isMobile && !mobileOpen ? 'translateX(-100%)' : undefined
         }}
@@ -123,11 +124,10 @@ const handleLogout = () => {
                   setCurrentPage(item.id);
                   if (isMobile) setMobileOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg mb-1 transition-colors ${
-                  isActive
+                className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg mb-1 transition-colors ${isActive
                     ? 'bg-green-600 text-white shadow-lg'
                     : 'text-green-100 hover:bg-green-800'
-                }`}
+                  }`}
                 title={collapsed ? item.label : ''}
                 style={{
                   backgroundColor: isActive ? '#059669' : 'transparent',

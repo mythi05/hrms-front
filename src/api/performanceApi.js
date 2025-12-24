@@ -1,15 +1,18 @@
 import axiosInstance from './axios';
 
-// Admin/HR APIs
-export const adminGetPerformanceReviews = (params = {}) =>
-  axiosInstance.get('/admin/performance', { params });
+const API_BASE = '/performance';
 
-export const adminCreateOrUpdatePerformance = (payload) =>
-  axiosInstance.post('/admin/performance', payload);
+const performanceApi = {
+  list: (params) => axiosInstance.get(API_BASE, { params }),
+  myReviews: () => axiosInstance.get(`${API_BASE}/my`),
+  adminList: (period) => axiosInstance.get(`${API_BASE}/admin`, { params: { period } }),
+  getById: (id) => axiosInstance.get(`${API_BASE}/${id}`),
+  createOrUpdateAdmin: (dto) => axiosInstance.post(`${API_BASE}/admin`, dto),
+  createOrUpdate: (dto) => axiosInstance.post(API_BASE, dto),
+  submit: (id) => axiosInstance.post(`${API_BASE}/${id}/submit`),
+  approve: (id) => axiosInstance.post(`${API_BASE}/${id}/approve`),
+  remove: (id) => axiosInstance.delete(`${API_BASE}/${id}`),
+};
 
-// Employee APIs
-export const getMyPerformanceReviews = () =>
-  axiosInstance.get('/performance/my');
+export default performanceApi;
 
-export const getMyPerformanceDetail = (id) =>
-  axiosInstance.get(`/performance/${id}`);

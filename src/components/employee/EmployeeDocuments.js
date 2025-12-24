@@ -1,22 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../../styles/documents.css';
+import axiosInstance from '../../api/axios';
 
 export const EmployeeDocuments = () => {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const documents = [
-    { id: '1', name: 'Hợp đồng lao động.pdf', type: 'pdf', size: '1.5 MB', date: '01/01/2024', category: 'personal' },
-    { id: '2', name: 'Bảng lương tháng 12.pdf', type: 'pdf', size: '850 KB', date: '20/12/2024', category: 'personal', isNew: true },
-    { id: '3', name: 'Quy chế làm việc.pdf', type: 'pdf', size: '2.5 MB', date: '20/12/2024', category: 'company', sharedBy: 'Admin', isNew: true },
-    { id: '4', name: 'Tài liệu onboarding.docx', type: 'word', size: '1.8 MB', date: '15/12/2024', category: 'training', sharedBy: 'HR Manager' },
-    { id: '5', name: 'Chính sách phúc lợi.pdf', type: 'pdf', size: '1.2 MB', date: '10/12/2024', category: 'company', sharedBy: 'Admin' },
-    { id: '6', name: 'Báo cáo công việc Q4.xlsx', type: 'excel', size: '2.3 MB', date: '05/12/2024', category: 'personal' },
-    { id: '7', name: 'Tài liệu đào tạo kỹ năng', type: 'folder', size: '8 files', date: '01/12/2024', category: 'training', sharedBy: 'Training Team' },
-    { id: '8', name: 'Giấy xác nhận thu nhập.pdf', type: 'pdf', size: '650 KB', date: '25/11/2024', category: 'personal' },
-    { id: '9', name: 'Dự án ABC - Tài liệu.docx', type: 'word', size: '3.1 MB', date: '20/11/2024', category: 'shared', sharedBy: 'Trần Văn B' },
-  ];
+  const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const categories = [
     { id: 'all', name: 'Tất cả tài liệu', icon: '📁', count: documents.length },
@@ -26,6 +18,72 @@ export const EmployeeDocuments = () => {
     { id: 'training', name: 'Đào tạo', icon: '📚', count: documents.filter(d => d.category === 'training').length },
     { id: 'shared', name: 'Được chia sẻ', icon: '🔗', count: documents.filter(d => d.category === 'shared').length },
   ];
+
+  useEffect(() => {
+    fetchDocuments();
+  }, [activeCategory, searchQuery]);
+
+  const fetchDocuments = async () => {
+    setLoading(true);
+    try {
+      const res = await axiosInstance.get('/documents', {
+        params: { category: activeCategory, search: searchQuery }
+      });
+      setDocuments(res.data);
+    } catch (err) {
+      console.error('Load employee documents error', err);
+    }
+    setLoading(false);
+  };
+
+  const downloadFile = (id) => {
+    (async () => {
+      try {
+        const res = await axiosInstance.get(`/documents/${id}/download`, { responseType: 'blob' });
+        const blob = new Blob([res.data], { type: res.headers['content-type'] || 'application/octet-stream' });
+        const url = window.URL.createObjectURL(blob);
+
+        let filename = 'file';
+        const cd = res.headers['content-disposition'];
+        if (cd) {
+          const match = cd.match(/filename=\"?([^\";]+)\"?/);
+          if (match) filename = match[1];
+        }
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+      } catch (err) {
+        if (err.response && err.response.status === 401) {
+          alert('Bạn cần đăng nhập để tải tài liệu.');
+          window.location.href = '/login';
+          return;
+        }
+        console.error('Download error', err);
+      }
+    })();
+  };
+
+  const viewFile = async (id) => {
+    try {
+      const res = await axiosInstance.get(`/documents/${id}/view`, { responseType: 'blob' });
+      const blob = new Blob([res.data], { type: res.headers['content-type'] || 'application/octet-stream' });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
+        alert('Bạn cần đăng nhập để xem tài liệu.');
+        window.location.href = '/login';
+        return;
+      }
+      console.error('View error', err);
+    }
+  };
 
   const filteredDocuments = documents.filter(doc => {
     const matchesCategory =
@@ -188,6 +246,10 @@ export const EmployeeDocuments = () => {
                     <button className="action-menu-btn">⋮</button>
                   </div>
 
+                  <div className="card-actions">
+                    <button onClick={() => downloadFile(doc.id)}>⬇️</button>
+                  </div>
+
                   <div className={`document-icon ${doc.type}`}>
                     {getDocumentIcon(doc.type)}
                   </div>
@@ -224,8 +286,8 @@ export const EmployeeDocuments = () => {
                   <div className="row-date">{doc.date}</div>
 
                   <div className="row-actions">
-                    <button className="action-btn" title="Xem">👁️</button>
-                    <button className="action-btn" title="Tải xuống">⬇️</button>
+                    <button className="action-btn" title="Xem" onClick={() => viewFile(doc.id)}>👁️</button>
+                    <button className="action-btn" title="Tải xuống" onClick={() => downloadFile(doc.id)}>⬇️</button>
                     <button className="action-btn" title="Chia sẻ">🔗</button>
                   </div>
                 </div>

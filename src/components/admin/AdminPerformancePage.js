@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Search, Plus, Edit2, Star, User, Calendar, CheckCircle2 } from 'lucide-react';
-import { adminGetPerformanceReviews, adminCreateOrUpdatePerformance } from '../../api/performanceApi';
+import '../../styles/AdminPerformancePage.css';
+import performanceApi from '../../api/performanceApi';
 import { employeeApi } from '../../api/employeeApi';
-
 export default function AdminPerformancePage() {
   const [reviews, setReviews] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -21,6 +21,14 @@ export default function AdminPerformancePage() {
 
   const loadEmployees = async () => {
     try {
+      // Mock data - Replace with actual API call
+      const mockEmployees = [
+        { id: 1, fullName: 'Nguyễn Văn A' },
+        { id: 2, fullName: 'Trần Thị B' },
+        { id: 3, fullName: 'Lê Văn C' },
+        { id: 4, fullName: 'Phạm Thị D' },
+      ];
+      setEmployees(mockEmployees);
       const res = await employeeApi.getAll();
       setEmployees(res.data || []);
     } catch (e) {
@@ -31,10 +39,11 @@ export default function AdminPerformancePage() {
   const loadReviews = async () => {
     try {
       setLoading(true);
+      // Mock data - Replace with actual API call
       const params = {};
       if (filter.employeeId) params.employeeId = filter.employeeId;
       if (filter.period) params.period = filter.period;
-      const res = await adminGetPerformanceReviews(params);
+      const res = await performanceApi.list(params);
       setReviews(res.data || []);
     } catch (e) {
       console.error('Lỗi tải đánh giá hiệu suất:', e);
@@ -85,6 +94,20 @@ export default function AdminPerformancePage() {
       return;
     }
     try {
+      // const payload = {
+      //   id: form.id,
+      //   employeeId: Number(form.employeeId),
+      //   period: form.period,
+      //   goals: form.goals,
+      //   score: form.score ? Number(form.score) : null,
+      //   comments: form.comments,
+      //   status: form.status,
+      // };
+      // await adminCreateOrUpdatePerformance(payload);
+      console.log('Saving performance review:', form);
+      resetForm();
+      await loadReviews();
+      alert('Lưu đánh giá hiệu suất thành công');
       const payload = {
         id: form.id,
         employeeId: Number(form.employeeId),
@@ -94,13 +117,49 @@ export default function AdminPerformancePage() {
         comments: form.comments,
         status: form.status,
       };
-      await adminCreateOrUpdatePerformance(payload);
-      resetForm();
-      await loadReviews();
-      alert('Lưu đánh giá hiệu suất thành công');
+      const res = await performanceApi.createOrUpdateAdmin(payload);
+      setForm((prev) => ({ ...prev, id: res.data?.id ?? prev.id }));
     } catch (e) {
       console.error('Lỗi lưu đánh giá hiệu suất:', e);
       alert('Không thể lưu đánh giá. Vui lòng kiểm tra lại.');
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!form.id) return alert('Chọn đánh giá để phê duyệt');
+    try {
+      await performanceApi.approve(form.id);
+      alert('Phê duyệt thành công');
+      await loadReviews();
+    } catch (e) {
+      console.error('Lỗi phê duyệt:', e);
+      alert('Không thể phê duyệt');
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!form.id) return alert('Chọn đánh giá để nộp');
+    try {
+      await performanceApi.submit(form.id);
+      alert('Nộp đánh giá thành công');
+      await loadReviews();
+    } catch (e) {
+      console.error('Lỗi nộp đánh giá:', e);
+      alert('Không thể nộp đánh giá');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!form.id) return alert('Chọn đánh giá để xóa');
+    if (!window.confirm('Xác nhận xóa đánh giá này?')) return;
+    try {
+      await performanceApi.remove(form.id);
+      alert('Xóa thành công');
+      resetForm();
+      await loadReviews();
+    } catch (e) {
+      console.error('Lỗi xóa:', e);
+      alert('Không thể xóa đánh giá');
     }
   };
 
@@ -109,34 +168,40 @@ export default function AdminPerformancePage() {
     return emp ? emp.fullName : '---';
   };
 
+  const getStatusClass = (status) => {
+    if (status === 'APPROVED') return 'approved';
+    if (status === 'SUBMITTED') return 'submitted';
+    return 'draft';
+  };
+
   return (
-    <div className="flex flex-col lg:flex-row gap-6">
+    <div className="admin-performance-container">
       {/* Danh sách đánh giá */}
-      <div className="lg:w-2/3 bg-white rounded-xl shadow border border-gray-100 p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <Star className="w-5 h-5 text-yellow-500" />
+      <div className="admin-list-panel">
+        <div className="panel-header">
+          <div className="panel-header-content">
+            <h1>
+              <Star />
               Đánh giá hiệu suất
             </h1>
-            <p className="text-xs text-gray-500 mt-1">Quản lý đánh giá hiệu suất theo nhân viên và kỳ đánh giá.</p>
+            <p>Quản lý đánh giá hiệu suất theo nhân viên và kỳ đánh giá.</p>
           </div>
           <button
             type="button"
             onClick={resetForm}
-            className="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
+            className="btn-create"
           >
-            <Plus className="w-4 h-4" />
+            <Plus />
             Tạo mới
           </button>
         </div>
 
         {/* Bộ lọc */}
-        <div className="flex flex-wrap gap-3 mb-4">
-          <div className="flex-1 min-w-[160px]">
-            <label className="block text-xs text-gray-500 mb-1">Nhân viên</label>
+        <div className="filter-section">
+          <div className="filter-group">
+            <label>Nhân viên</label>
             <select
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="filter-select"
               value={filter.employeeId}
               onChange={(e) => setFilter((prev) => ({ ...prev, employeeId: e.target.value }))}
             >
@@ -148,77 +213,67 @@ export default function AdminPerformancePage() {
               ))}
             </select>
           </div>
-          <div className="flex-1 min-w-[140px]">
-            <label className="block text-xs text-gray-500 mb-1">Kỳ đánh giá</label>
+          <div className="filter-group">
+            <label>Kỳ đánh giá</label>
             <input
               type="text"
               placeholder="VD: 2025-Q1"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="filter-input"
               value={filter.period}
               onChange={(e) => setFilter((prev) => ({ ...prev, period: e.target.value }))}
             />
           </div>
-          <div className="flex items-end">
+          <div className="filter-button-wrapper">
             <button
               type="button"
               onClick={loadReviews}
-              className="inline-flex items-center gap-1 px-3 py-2 text-xs font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="btn-filter"
             >
-              <Search className="w-4 h-4" />
+              <Search />
               Lọc
             </button>
           </div>
         </div>
 
-        <div className="border rounded-lg overflow-hidden">
-          <div className="grid grid-cols-5 bg-gray-50 text-xs font-semibold text-gray-500 px-4 py-2">
+        <div className="admin-table">
+          <div className="admin-table-header">
             <div>Nhân viên</div>
             <div>Kỳ</div>
             <div>Điểm</div>
             <div>Trạng thái</div>
             <div>Ngày tạo</div>
           </div>
-          <div className="max-h-[420px] overflow-y-auto text-sm">
+          <div className="admin-table-body">
             {loading ? (
-              <div className="p-4 text-center text-gray-500 text-xs">Đang tải...</div>
+              <div className="table-message">Đang tải dữ liệu...</div>
             ) : reviews.length === 0 ? (
-              <div className="p-4 text-center text-gray-500 text-xs">Chưa có đánh giá nào.</div>
+              <div className="table-message">Chưa có đánh giá nào.</div>
             ) : (
               reviews.map((r) => (
                 <button
                   key={r.id}
                   type="button"
                   onClick={() => handleSelectReview(r)}
-                  className={`w-full grid grid-cols-5 px-4 py-2 border-t border-gray-100 text-left hover:bg-blue-50 ${
-                    selectedReview?.id === r.id ? 'bg-blue-50' : 'bg-white'
-                  }`}
+                  className={`admin-row ${selectedReview?.id === r.id ? 'active' : ''}`}
                 >
-                  <div className="truncate flex items-center gap-1">
-                    <User className="w-3 h-3 text-gray-400" />
+                  <div className="admin-cell">
+                    <User />
                     <span>{r.employeeName || getEmployeeName(r.employeeId)}</span>
                   </div>
-                  <div className="truncate flex items-center gap-1">
-                    <Calendar className="w-3 h-3 text-gray-400" />
+                  <div className="admin-cell">
+                    <Calendar />
                     <span>{r.period}</span>
                   </div>
-                  <div className="truncate flex items-center gap-1">
-                    <Star className="w-3 h-3 text-yellow-500" />
+                  <div className="admin-cell admin-cell-star">
+                    <Star />
                     <span>{r.score != null ? r.score : '-'}</span>
                   </div>
-                  <div className="truncate">
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                        r.status === 'APPROVED'
-                          ? 'bg-green-50 text-green-700'
-                          : r.status === 'SUBMITTED'
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'bg-gray-50 text-gray-600'
-                      }`}
-                    >
+                  <div className="admin-cell">
+                    <span className={`review-status-badge ${getStatusClass(r.status)}`}>
                       {r.status}
                     </span>
                   </div>
-                  <div className="truncate text-xs text-gray-500">
+                  <div className="admin-cell admin-cell-date">
                     {r.createdAt ? new Date(r.createdAt).toLocaleString('vi-VN') : ''}
                   </div>
                 </button>
@@ -229,18 +284,18 @@ export default function AdminPerformancePage() {
       </div>
 
       {/* Form tạo/cập nhật đánh giá */}
-      <div className="lg:w-1/3 bg-white rounded-xl shadow border border-gray-100 p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-            <Edit2 className="w-4 h-4 text-blue-600" />
+      <div className="admin-form-panel">
+        <div className="form-header">
+          <h2>
+            <Edit2 />
             {form.id ? 'Cập nhật đánh giá' : 'Tạo đánh giá mới'}
           </h2>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-3 text-sm">
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Nhân viên</label>
+        <form onSubmit={handleSubmit} className="performance-form">
+          <div className="form-field">
+            <label>Nhân viên</label>
             <select
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="filter-select"
               value={form.employeeId}
               onChange={(e) => setForm((prev) => ({ ...prev, employeeId: e.target.value }))}
               required
@@ -254,50 +309,42 @@ export default function AdminPerformancePage() {
             </select>
           </div>
 
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Kỳ đánh giá</label>
+          <div className="form-field">
+            <label>Kỳ đánh giá</label>
             <input
               type="text"
               placeholder="VD: 2025-Q1, 2025"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
               value={form.period}
               onChange={(e) => setForm((prev) => ({ ...prev, period: e.target.value }))}
               required
             />
           </div>
 
-          <div>
-            <label className="block text-xs text-gray-500 mb-1 flex items-center justify-between">
-              Mục tiêu / Mô tả
-            </label>
+          <div className="form-field">
+            <label>Mục tiêu / Mô tả</label>
             <textarea
               rows={3}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none"
               value={form.goals}
               onChange={(e) => setForm((prev) => ({ ...prev, goals: e.target.value }))}
               placeholder="Tổng hợp mục tiêu công việc, KPI, OKR..."
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs text-gray-500 mb-1 flex items-center gap-1">
-                Điểm tổng
-              </label>
+          <div className="form-grid">
+            <div className="form-field">
+              <label>Điểm tổng</label>
               <input
                 type="number"
                 min="0"
                 max="100"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                 value={form.score}
                 onChange={(e) => setForm((prev) => ({ ...prev, score: e.target.value }))}
                 placeholder="0 - 100"
               />
             </div>
-            <div>
-              <label className="block text-xs text-gray-500 mb-1">Trạng thái</label>
+            <div className="form-field">
+              <label>Trạng thái</label>
               <select
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
                 value={form.status}
                 onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value }))}
               >
@@ -308,32 +355,44 @@ export default function AdminPerformancePage() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs text-gray-500 mb-1">Nhận xét</label>
+          <div className="form-field">
+            <label>Nhận xét</label>
             <textarea
               rows={3}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none"
               value={form.comments}
               onChange={(e) => setForm((prev) => ({ ...prev, comments: e.target.value }))}
               placeholder="Nhận xét chi tiết về kết quả công việc, điểm mạnh, điểm cần cải thiện..."
             />
           </div>
 
-          <div className="pt-2 flex items-center justify-between gap-3">
+          <div className="form-actions">
             <button
               type="button"
               onClick={resetForm}
-              className="px-3 py-2 text-xs font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              className="btn-reset"
             >
               Đặt lại
             </button>
             <button
               type="submit"
-              className="inline-flex items-center gap-1 px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg"
+              className="btn-submit"
             >
-              <CheckCircle2 className="w-4 h-4" />
+              <CheckCircle2 />
               Lưu đánh giá
             </button>
+            {form.id && (
+              <>
+                <button type="button" onClick={handleSubmitReview} className="btn-submit" style={{marginLeft:8}}>
+                  Nộp
+                </button>
+                <button type="button" onClick={handleApprove} className="btn-submit" style={{marginLeft:8}}>
+                  Phê duyệt
+                </button>
+                <button type="button" onClick={handleDelete} className="btn-reset" style={{marginLeft:8}}>
+                  Xóa
+                </button>
+              </>
+            )}
           </div>
         </form>
       </div>
