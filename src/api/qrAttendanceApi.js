@@ -24,3 +24,10 @@ export const getQRImageUrl = (qrCode, width = 320, height = 320) => {
   const base = axiosInstance.defaults.baseURL || "";
   return `${base}/qr-attendance/admin/qr/image?${params.toString()}`;
 };
+
+export const getQRImageBlob = (qrCode, width = 320, height = 320) => {
+  return axiosInstance.get(`${BASE_URL}/admin/qr/image`, {
+    params: { qrCode, w: width, h: height },
+    responseType: 'blob',
+  });
+};

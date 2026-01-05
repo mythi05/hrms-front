@@ -28,7 +28,10 @@ export default function EmployeePayroll() {
       setError('');
       try {
         const [curRes, histRes] = await Promise.all([
-          getMyCurrentPayroll(currentUser.id),
+          getMyCurrentPayroll(currentUser.id).catch((e) => {
+            if (e?.response?.status === 404) return { data: null };
+            throw e;
+          }),
           getMyPayrollHistory(currentUser.id, 6),
         ]);
         setCurrentPayroll(curRes.data);

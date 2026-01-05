@@ -4,7 +4,7 @@ import {
   checkIn,
   checkOut,
   getTodayAttendance,
-  getAttendanceHistory,
+  getAttendanceOfMonth,
   scanAttendanceQR,
   formatAttendanceRecords
 } from '../../../api/attendanceApi';
@@ -15,6 +15,9 @@ export default function EmployeeAttendance() {
   const [history, setHistory] = useState([]);
   const [stats, setStats] = useState({ weeklyHours: '0h', onTime: '0/0', lateCount: '0', overtime: '0h' });
   const [loading, setLoading] = useState(false);
+
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [qrManualCode, setQrManualCode] = useState('');
@@ -48,7 +51,7 @@ export default function EmployeeAttendance() {
     try {
       const [todayRes, historyRes] = await Promise.all([
         getTodayAttendance(employeeId).catch(() => ({ data: null })),
-        getAttendanceHistory(employeeId).catch(() => ({ data: [] }))
+        getAttendanceOfMonth(employeeId, selectedMonth, selectedYear).catch(() => ({ data: [] }))
       ]);
 
       const rawHistory = historyRes.data || [];
@@ -97,7 +100,7 @@ export default function EmployeeAttendance() {
   useEffect(() => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [employeeId]);
+  }, [employeeId, selectedMonth, selectedYear]);
 
   useEffect(() => {
     if (!showQRScanner) {
@@ -321,11 +324,31 @@ export default function EmployeeAttendance() {
       <div className="bg-white rounded-lg shadow">
         <div className="p-4 sm:p-6 border-b flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <h3 className="text-sm sm:text-base">Lịch sử chấm công</h3>
-          <select className="border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm w-full sm:w-auto">
-            <option>Tháng này</option>
-            <option>Tháng trước</option>
-            <option>3 tháng</option>
-          </select>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <select
+              className="border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm w-full sm:w-auto"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              disabled={loading}
+            >
+              {Array.from({ length: 12 }, (_, i) => (
+                <option key={i + 1} value={i + 1}>Tháng {i + 1}</option>
+              ))}
+            </select>
+            <select
+              className="border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-xs sm:text-sm w-full sm:w-auto"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              disabled={loading}
+            >
+              {Array.from({ length: 5 }, (_, i) => {
+                const y = new Date().getFullYear() - i;
+                return (
+                  <option key={y} value={y}>{y}</option>
+                );
+              })}
+            </select>
+          </div>
         </div>
 
         <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">

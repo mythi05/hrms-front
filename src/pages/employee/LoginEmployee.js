@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User, Lock, Shield } from "lucide-react";
 import axiosInstance from "../../api/axios";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,12 @@ export default function LoginEmployee() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Clear localStorage on mount to ensure fresh login (avoid expired token errors)
+  useEffect(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });

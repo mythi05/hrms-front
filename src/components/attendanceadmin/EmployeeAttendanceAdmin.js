@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Clock, TrendingUp, CheckCircle, XCircle, Trash2, Edit, Upload, Download, User, Plus } from "lucide-react";
 import { adminGetAllAttendance, adminDeleteAttendance, adminDeleteAllAttendance, formatAttendanceRecords } from "../../api/attendanceApi";
-import { createAttendanceQR, getAttendanceQRsByDate, getRecentQRScans, getQRImageUrl } from "../../api/qrAttendanceApi";
+import { createAttendanceQR, getAttendanceQRsByDate, getRecentQRScans, getQRImageBlob, getQRImageUrl } from "../../api/qrAttendanceApi";
 import AttendanceModal from "./AttendanceModal";
 import EmployeeDetailModal from "./EmployeeDetailModal";
 
@@ -31,6 +31,8 @@ export default function EmployeeAttendanceAdmin() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentTime, setCurrentTime] = useState(new Date().toLocaleTimeString('vi-VN'));
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [stats, setStats] = useState({
     totalToday: 0,
     onTimeToday: 0,
@@ -51,6 +53,7 @@ export default function EmployeeAttendanceAdmin() {
   const [qrLoading, setQrLoading] = useState(false);
   const [qrError, setQrError] = useState("");
   const [qrList, setQrList] = useState([]);
+  const [qrImageMap, setQrImageMap] = useState({});
 
   const [recentScans, setRecentScans] = useState([]);
   const [recentLoading, setRecentLoading] = useState(false);
@@ -109,6 +112,31 @@ export default function EmployeeAttendanceAdmin() {
       setQrList(res.data || []);
     } catch (err) {
       console.error("Lỗi tải QR chấm công:", err);
+    }
+  };
+
+  useEffect(() => {
+    // cleanup old object urls when qrList changes
+    return () => {
+      try {
+        Object.values(qrImageMap).forEach((u) => {
+          if (typeof u === 'string' && u.startsWith('blob:')) URL.revokeObjectURL(u);
+        });
+      } catch {
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qrList]);
+
+  const ensureBlobImage = async (qrCode) => {
+    if (!qrCode) return;
+    if (qrImageMap[qrCode]) return;
+    try {
+      const res = await getQRImageBlob(qrCode, 260, 260);
+      const url = URL.createObjectURL(res.data);
+      setQrImageMap((prev) => ({ ...prev, [qrCode]: url }));
+    } catch (e) {
+      // keep silent; UI will continue showing broken image if both methods fail
     }
   };
 
@@ -193,6 +221,24 @@ export default function EmployeeAttendanceAdmin() {
         return 'bg-gray-100 text-gray-700';
     }
   };
+
+  const filteredAttendance = (() => {
+    const parseMonthYear = (dateStr) => {
+      // dateStr currently formatted by formatAttendanceRecords() as dd/MM/yyyy
+      if (!dateStr || typeof dateStr !== 'string') return null;
+      const parts = dateStr.split('/');
+      if (parts.length !== 3) return null;
+      const m = Number(parts[1]);
+      const y = Number(parts[2]);
+      if (!Number.isFinite(m) || !Number.isFinite(y)) return null;
+      return { m, y };
+    };
+
+    return (allAttendance || []).filter(r => {
+      const my = parseMonthYear(r.date);
+      return my && my.m === selectedMonth && my.y === selectedYear;
+    });
+  })();
 
   return (
     <div className="container-fluid py-4">
@@ -318,9 +364,10 @@ export default function EmployeeAttendanceAdmin() {
                     </div>
                     <div className="text-xs text-gray-500">Hiệu lực: {qr.timeRange}</div>
                     <img
-                      src={getQRImageUrl(qr.qrCode, 260, 260)}
+                      src={qrImageMap[qr.qrCode] || getQRImageUrl(qr.qrCode, 260, 260)}
                       alt="QR chấm công"
                       className="w-full max-w-[220px] sm:max-w-[260px] border rounded"
+                      onError={() => ensureBlobImage(qr.qrCode)}
                     />
                     <div className="text-[10px] text-gray-400 break-all">{qr.qrCode}</div>
                   </div>
@@ -441,7 +488,34 @@ export default function EmployeeAttendanceAdmin() {
       {/* Bảng dữ liệu chấm công toàn bộ */}
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b">
-          <h3 className="text-xl font-semibold text-gray-800">Tất cả Bản ghi Chấm công</h3>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <h3 className="text-xl font-semibold text-gray-800">Bản ghi Chấm công theo tháng</h3>
+            <div className="flex items-center gap-2">
+              <select
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                disabled={loading}
+              >
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>Tháng {i + 1}</option>
+                ))}
+              </select>
+              <select
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                disabled={loading}
+              >
+                {Array.from({ length: 5 }, (_, i) => {
+                  const y = new Date().getFullYear() - i;
+                  return (
+                    <option key={y} value={y}>{y}</option>
+                  );
+                })}
+              </select>
+            </div>
+          </div>
         </div>
 
         {loading ? (
@@ -465,8 +539,8 @@ export default function EmployeeAttendanceAdmin() {
                     </tr>
                 </thead>
                 <tbody>
-                    {allAttendance.length > 0 ? (
-                    allAttendance.map((record) => (
+                    {filteredAttendance.length > 0 ? (
+                    filteredAttendance.map((record) => (
                         <tr key={record.id} className="border-b hover:bg-gray-50">
                             <td className="p-4 text-gray-700">{record.id}</td>
                             <td className="p-4 text-gray-700">
@@ -498,7 +572,7 @@ export default function EmployeeAttendanceAdmin() {
                     ) : (
                         <tr>
                             <td colSpan="9" className="p-4 text-center text-gray-500">
-                                Không có dữ liệu chấm công nào.
+                                Không có dữ liệu chấm công cho tháng này.
                             </td>
                         </tr>
                     )}

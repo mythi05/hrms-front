@@ -41,7 +41,10 @@ export default function EmployeeDashboard({ setCurrentPage }) {
           getTodayAttendance(currentUser.id),
           getAttendanceHistory(currentUser.id),
           getMyLeaveRequests(currentUser.id),
-          getMyCurrentPayroll(currentUser.id),
+          getMyCurrentPayroll(currentUser.id).catch((e) => {
+            if (e?.response?.status === 404) return { data: null };
+            throw e;
+          }),
           getEmployeePayrollTrends(currentUser.id)
         ]);
         
