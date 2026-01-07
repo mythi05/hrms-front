@@ -90,12 +90,8 @@ export default function EmployeePortal() {
 
 
           {currentPage === 'settings' && <EmployeeSettings />}
-          {currentPage === 'training' && (
-            <div className="bg-white rounded-lg shadow p-4 md:p-8">
-              <h2 className="mb-4 text-lg md:text-xl">Khóa học của tôi</h2>
-              <p className="text-gray-600 text-sm md:text-base">Danh sách khóa học đào tạo sẽ hiển thị ở đây</p>
-            </div>
-          )}
+          
+        
 
         </main>
       </div>

@@ -76,11 +76,7 @@ export const importAttendanceFromExcel = (file) => {
   const formData = new FormData();
   formData.append('file', file);
   
-  return axiosInstance.post(`${API_BASE_URL}/admin/import`, formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    }
-  });
+  return axiosInstance.post(`${API_BASE_URL}/admin/import`, formData);
 };
 
 export const downloadAttendanceTemplate = () => {

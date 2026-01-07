@@ -31,7 +31,7 @@ export function EmployeeSidebar({ currentPage, setCurrentPage, collapsed, setCol
     { id: 'attendance', label: 'Chấm công', icon: Clock },
     { id: 'leave', label: 'Nghỉ phép', icon: Calendar },
     { id: 'payroll', label: 'Lương', icon: DollarSign },
-    { id: 'training', label: 'Đào tạo', icon: GraduationCap },
+    // { id: 'training', label: 'Đào tạo', icon: GraduationCap },
     { id: 'tasks', label: 'Công việc', icon: FileText },
     { id: 'performance', label: 'Hiệu suất', icon: Calendar },
     { id: 'documents', label: 'Tài liệu', icon: FileText },

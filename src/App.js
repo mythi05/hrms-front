@@ -88,10 +88,9 @@ export default function App() {
           return <AdminTaskPage />;
         case "performance":
           return <AdminPerformancePage />;
-        case "recruitment":
-          return <div>Tuyển dụng</div>;
-        case "training":
-          return <div>Đào tạo</div>;
+        // case "recruitment":
+        //   return <div>Tuyển dụng</div>;
+
         case "reports":
           return <AdminDocuments />;
         case "settings":
