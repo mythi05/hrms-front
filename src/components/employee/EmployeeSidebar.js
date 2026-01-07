@@ -10,7 +10,8 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  Bell
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
@@ -31,7 +32,7 @@ export function EmployeeSidebar({ currentPage, setCurrentPage, collapsed, setCol
     { id: 'attendance', label: 'Chấm công', icon: Clock },
     { id: 'leave', label: 'Nghỉ phép', icon: Calendar },
     { id: 'payroll', label: 'Lương', icon: DollarSign },
-    // { id: 'training', label: 'Đào tạo', icon: GraduationCap },
+    { id: 'notifications', label: 'Thông báo', icon: Bell },
     { id: 'tasks', label: 'Công việc', icon: FileText },
     { id: 'performance', label: 'Hiệu suất', icon: Calendar },
     { id: 'documents', label: 'Tài liệu', icon: FileText },

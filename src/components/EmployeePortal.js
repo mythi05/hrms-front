@@ -87,6 +87,7 @@ export default function EmployeePortal() {
           {currentPage === 'notifications' && <EmployeeNotifications />}
           {currentPage === 'documents' && <EmployeeDocuments />}
           {currentPage === 'performance' && <EmployeePerformance />}
+          {currentPage === 'notifications' && <EmployeeNotifications  />}
 
 
           {currentPage === 'settings' && <EmployeeSettings />}
