@@ -1,4 +1,4 @@
-import { Mail, User, Menu } from 'lucide-react';
+import { Mail, Menu } from 'lucide-react';
 import EmployeeNotificationBell from '../notifications/EmployeeNotificationBell';
 
 export default function EmployeeHeader({ isMobile, onOpenSidebar }) {
@@ -15,6 +15,17 @@ export default function EmployeeHeader({ isMobile, onOpenSidebar }) {
 
   const fullName = user?.fullName || user?.username || 'Nhân viên';
   const position = user?.position || 'Nhân viên';
+  const avatarUrl = user?.avatarUrl || user?.photoUrl || user?.avatar || '';
+
+  const initials = (() => {
+    const s = (fullName || '').trim();
+    if (!s) return 'NV';
+    const parts = s.split(/\s+/).filter(Boolean);
+    const first = parts[0]?.[0] || '';
+    const last = parts[parts.length - 1]?.[0] || '';
+    const val = `${first}${last}`.toUpperCase();
+    return val || 'NV';
+  })();
 
   const now = new Date();
   const dateLabel = now.toLocaleDateString('vi-VN', {
@@ -59,8 +70,12 @@ export default function EmployeeHeader({ isMobile, onOpenSidebar }) {
               <div className="text-gray-800 text-xs font-medium truncate max-w-xs">{fullName}</div>
               <div className="text-xs text-gray-500 truncate max-w-xs">{position}</div>
             </div>
-            <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center flex-shrink-0">
-              <User size={16} className="text-white" />
+            <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={fullName} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-white text-xs font-semibold">{initials}</span>
+              )}
             </div>
           </div>
         </div>

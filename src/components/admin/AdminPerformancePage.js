@@ -186,14 +186,7 @@ export default function AdminPerformancePage() {
             </h1>
             <p>Quản lý đánh giá hiệu suất theo nhân viên và kỳ đánh giá.</p>
           </div>
-          <button
-            type="button"
-            onClick={resetForm}
-            className="btn-create"
-          >
-            <Plus />
-            Tạo mới
-          </button>
+
         </div>
 
         {/* Bộ lọc */}

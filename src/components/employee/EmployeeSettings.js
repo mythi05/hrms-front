@@ -1,11 +1,105 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import '../../styles/settings.css';
+import { employeeApi } from '../../api/employeeApi';
 
 const EmployeeSettings = () => {
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [original, setOriginal] = useState(null);
+
+  const [fullName, setFullName] = useState('');
+  const [employeeCode, setEmployeeCode] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [department, setDepartment] = useState('');
+  const [position, setPosition] = useState('');
+  const [address, setAddress] = useState('');
+
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [leaveNotifications, setLeaveNotifications] = useState(true);
   const [payrollNotifications, setPayrollNotifications] = useState(true);
+
+  const [language, setLanguage] = useState('vi');
+  const [theme, setTheme] = useState('light');
+  const [dateFormat, setDateFormat] = useState('DD/MM/YYYY');
+
+  const initials = useMemo(() => {
+    const s = (fullName || '').trim();
+    if (!s) return 'NV';
+    const parts = s.split(/\s+/).filter(Boolean);
+    const first = parts[0]?.[0] || '';
+    const last = parts[parts.length - 1]?.[0] || '';
+    const val = `${first}${last}`.toUpperCase();
+    return val || 'NV';
+  }, [fullName]);
+
+  const applyData = (data) => {
+    setFullName(data?.fullName ?? '');
+    setEmployeeCode(data?.employeeCode ?? '');
+    setEmail(data?.email ?? '');
+    setPhone(data?.phone ?? '');
+    setDepartment(data?.department ?? '');
+    setPosition(data?.position ?? '');
+    setAddress(data?.address ?? '');
+
+    setEmailNotifications(data?.emailNotifications ?? true);
+    setPushNotifications(data?.pushNotifications ?? true);
+    setLeaveNotifications(data?.leaveNotifications ?? true);
+    setPayrollNotifications(data?.payrollNotifications ?? true);
+
+    setLanguage(data?.language ?? 'vi');
+    setTheme(data?.theme ?? 'light');
+    setDateFormat(data?.dateFormat ?? 'DD/MM/YYYY');
+  };
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        const res = await employeeApi.getMe();
+        const data = res?.data || {};
+        setOriginal(data);
+        applyData(data);
+      } catch (e) {
+        console.error('Lỗi tải cài đặt:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true);
+      const payload = {
+        fullName,
+        email,
+        phone,
+        address,
+        emailNotifications,
+        pushNotifications,
+        leaveNotifications,
+        payrollNotifications,
+        language,
+        theme,
+        dateFormat
+      };
+      const res = await employeeApi.updateMe(payload);
+      const data = res?.data || {};
+      setOriginal(data);
+      applyData(data);
+    } catch (e) {
+      console.error('Lỗi cập nhật cài đặt:', e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (original) applyData(original);
+  };
 
   return (
     <div className="settings-content">
@@ -35,7 +129,7 @@ const EmployeeSettings = () => {
               marginBottom: '12px'
             }}
           >
-            NV
+            {initials}
           </div>
           <div>
             <button className="setting-button">Thay đổi ảnh</button>
@@ -45,13 +139,13 @@ const EmployeeSettings = () => {
         <div className="two-column-grid">
           <div className="form-group">
             <label>Họ và tên</label>
-            <input type="text" defaultValue="Nguyễn Văn A" />
+            <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} disabled={loading || saving} />
           </div>
           <div className="form-group">
             <label>Mã nhân viên</label>
             <input
               type="text"
-              defaultValue="NV001"
+              value={employeeCode}
               disabled
               style={{ background: '#f5f5f5' }}
             />
@@ -61,11 +155,11 @@ const EmployeeSettings = () => {
         <div className="two-column-grid">
           <div className="form-group">
             <label>Email</label>
-            <input type="email" defaultValue="nhanvien@company.com" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} disabled={loading || saving} />
           </div>
           <div className="form-group">
             <label>Số điện thoại</label>
-            <input type="tel" defaultValue="0912345678" />
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} disabled={loading || saving} />
           </div>
         </div>
 
@@ -74,7 +168,7 @@ const EmployeeSettings = () => {
             <label>Phòng ban</label>
             <input
               type="text"
-              defaultValue="Phòng Công nghệ"
+              value={department}
               disabled
               style={{ background: '#f5f5f5' }}
             />
@@ -83,7 +177,7 @@ const EmployeeSettings = () => {
             <label>Chức vụ</label>
             <input
               type="text"
-              defaultValue="Nhân viên"
+              value={position}
               disabled
               style={{ background: '#f5f5f5' }}
             />
@@ -92,12 +186,14 @@ const EmployeeSettings = () => {
 
         <div className="form-group">
           <label>Địa chỉ</label>
-          <textarea defaultValue="456 Đường XYZ, Quận Tân Bình, TP. Hồ Chí Minh" />
+          <textarea value={address} onChange={(e) => setAddress(e.target.value)} disabled={loading || saving} />
         </div>
 
         <div className="form-actions">
-          <button className="setting-button primary">Cập nhật thông tin</button>
-          <button className="setting-button">Hủy</button>
+          <button className="setting-button primary" onClick={handleSaveProfile} disabled={loading || saving}>
+            Cập nhật thông tin
+          </button>
+          <button className="setting-button" onClick={handleCancel} disabled={loading || saving}>Hủy</button>
         </div>
       </div>
 
@@ -172,6 +268,7 @@ const EmployeeSettings = () => {
               type="checkbox"
               checked={emailNotifications}
               onChange={(e) => setEmailNotifications(e.target.checked)}
+              disabled={loading || saving}
             />
             <span className="toggle-slider"></span>
           </label>
@@ -187,6 +284,7 @@ const EmployeeSettings = () => {
               type="checkbox"
               checked={pushNotifications}
               onChange={(e) => setPushNotifications(e.target.checked)}
+              disabled={loading || saving}
             />
             <span className="toggle-slider"></span>
           </label>
@@ -202,6 +300,7 @@ const EmployeeSettings = () => {
               type="checkbox"
               checked={leaveNotifications}
               onChange={(e) => setLeaveNotifications(e.target.checked)}
+              disabled={loading || saving}
             />
             <span className="toggle-slider"></span>
           </label>
@@ -217,6 +316,7 @@ const EmployeeSettings = () => {
               type="checkbox"
               checked={payrollNotifications}
               onChange={(e) => setPayrollNotifications(e.target.checked)}
+              disabled={loading || saving}
             />
             <span className="toggle-slider"></span>
           </label>
@@ -278,9 +378,15 @@ const EmployeeSettings = () => {
             <h3>Ngôn ngữ</h3>
             <p>Chọn ngôn ngữ hiển thị</p>
           </div>
-          <select className="setting-button" style={{ width: '150px' }}>
-            <option>Tiếng Việt</option>
-            <option>English</option>
+          <select
+            className="setting-button"
+            style={{ width: '150px' }}
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            disabled={loading || saving}
+          >
+            <option value="vi">Tiếng Việt</option>
+            <option value="en">English</option>
           </select>
         </div>
 
@@ -289,10 +395,16 @@ const EmployeeSettings = () => {
             <h3>Giao diện</h3>
             <p>Chọn chế độ hiển thị</p>
           </div>
-          <select className="setting-button" style={{ width: '150px' }}>
-            <option>Sáng</option>
-            <option>Tối</option>
-            <option>Tự động</option>
+          <select
+            className="setting-button"
+            style={{ width: '150px' }}
+            value={theme}
+            onChange={(e) => setTheme(e.target.value)}
+            disabled={loading || saving}
+          >
+            <option value="light">Sáng</option>
+            <option value="dark">Tối</option>
+            <option value="auto">Tự động</option>
           </select>
         </div>
 
@@ -301,10 +413,16 @@ const EmployeeSettings = () => {
             <h3>Định dạng ngày</h3>
             <p>Chọn định dạng hiển thị ngày tháng</p>
           </div>
-          <select className="setting-button" style={{ width: '150px' }}>
-            <option>DD/MM/YYYY</option>
-            <option>MM/DD/YYYY</option>
-            <option>YYYY-MM-DD</option>
+          <select
+            className="setting-button"
+            style={{ width: '150px' }}
+            value={dateFormat}
+            onChange={(e) => setDateFormat(e.target.value)}
+            disabled={loading || saving}
+          >
+            <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+            <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+            <option value="YYYY-MM-DD">YYYY-MM-DD</option>
           </select>
         </div>
       </div>

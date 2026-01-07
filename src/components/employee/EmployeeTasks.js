@@ -28,7 +28,8 @@ export default function EmployeeTasks() {
       await loadData();
     } catch (err) {
       console.error('Lỗi cập nhật trạng thái công việc:', err);
-      alert('Không thể cập nhật trạng thái công việc');
+      const msg = err?.response?.data?.message || err?.response?.data || 'Không thể cập nhật trạng thái công việc';
+      alert(msg);
     }
   };
 

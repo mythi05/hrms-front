@@ -3,6 +3,14 @@ import axiosInstance from './axios';
 const API_BASE_URL = '/employees';
 
 export const employeeApi = {
+  getMe: () => {
+    return axiosInstance.get(`${API_BASE_URL}/me`);
+  },
+
+  updateMe: (data) => {
+    return axiosInstance.put(`${API_BASE_URL}/me`, data);
+  },
+
   // Lấy tất cả nhân viên
   getAll: () => {
     return axiosInstance.get(API_BASE_URL);

@@ -9,6 +9,7 @@ import {
   TrendingUp, 
   GraduationCap,
   FileText,
+  Bell,
   Settings,
   Building2,
   ChevronLeft,
@@ -48,6 +49,7 @@ export function Sidebar({ currentPage, setCurrentPage, collapsed, setCollapsed, 
     // { id: 'recruitment', label: 'Tuyển dụng', icon: UserPlus },
     { id: 'performance', label: 'Hiệu suất', icon: TrendingUp },
     { id: 'reports', label: 'Quản lý tài liệu', icon: FileText },
+    { id: 'notifications', label: 'Thông báo', icon: Bell },
     { id: 'settings', label: 'Cài đặt', icon: Settings },
   ];
 

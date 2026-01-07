@@ -15,7 +15,7 @@ export const EmployeeDocuments = () => {
     { id: 'recent', name: 'Gần đây', icon: '🕒', count: documents.filter(d => d.isNew).length },
     { id: 'personal', name: 'Tài liệu cá nhân', icon: '👤', count: documents.filter(d => d.category === 'personal').length },
     { id: 'company', name: 'Tài liệu công ty', icon: '🏢', count: documents.filter(d => d.category === 'company').length },
-    // { id: 'training', name: 'Đào tạo', icon: '📚', count: documents.filter(d => d.category === 'training').length },
+    { id: 'training', name: 'Đào tạo', icon: '📚', count: documents.filter(d => d.category === 'training').length },
     { id: 'shared', name: 'Được chia sẻ', icon: '🔗', count: documents.filter(d => d.category === 'shared').length },
   ];
 

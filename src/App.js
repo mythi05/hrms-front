@@ -22,6 +22,7 @@ import AdminTaskPage from "./components/admin/AdminTaskPage";
 import AdminPerformancePage from "./components/admin/AdminPerformancePage";
 import AdminSettings from "./components/admin/AdminSettings";
 import AdminDocuments from "./components/admin/AdminDocuments";
+import AdminNotifications from "./components/admin/AdminNotifications";
 
 export default function App() {
   const [currentPage, setCurrentPage] = useState("dashboard");
@@ -43,6 +44,18 @@ export default function App() {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const handler = (event) => {
+      const page = event.detail;
+      if (page) {
+        setCurrentPage(page);
+      }
+    };
+
+    window.addEventListener('admin:navigate', handler);
+    return () => window.removeEventListener('admin:navigate', handler);
   }, []);
 
   useEffect(() => {
@@ -93,6 +106,8 @@ export default function App() {
 
         case "reports":
           return <AdminDocuments />;
+        case "notifications":
+          return <AdminNotifications />;
         case "settings":
           return <AdminSettings />;
         default:
