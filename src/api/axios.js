@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseURL = (process.env.REACT_APP_API_BASE_URL || "http://localhost:8080/api").replace(/\/$/, "");
+const baseURL = (process.env.REACT_APP_API_BASE_URL || "https://app-f9bfc784-6639-4f0e-919c-b5ed407f3a5b.cleverapps.io/api").replace(/\/$/, "");
 
 const axiosInstance = axios.create({
 baseURL,
