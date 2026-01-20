@@ -9,4 +9,10 @@ export const adminDeleteTask = (id) => axiosInstance.delete(`/admin/tasks/${id}`
 
 // Employee
 export const getMyTasks = () => axiosInstance.get('/tasks/my');
-export const updateMyTaskStatus = (id, status) => axiosInstance.patch(`/tasks/${id}/status`, null, { params: { status } });
+export const updateMyTaskStatus = (id, status) => axiosInstance.patch(
+  `/tasks/${id}/status`,
+  { status },
+  {
+    headers: { 'Content-Type': 'application/json' },
+  }
+);
