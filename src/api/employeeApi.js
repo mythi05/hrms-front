@@ -38,7 +38,7 @@ export const employeeApi = {
 
   // Lấy nhân viên theo department
   getByDepartment: (departmentId) => {
-    return axiosInstance.get(`${API_BASE_URL}/department/${departmentId}`);
+    return axiosInstance.get(`/departments/${departmentId}/employees`);
   },
 
   // Lấy thống kê nhân viên
