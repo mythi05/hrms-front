@@ -1,11 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { adminGetAllTasks, adminCreateTask, adminUpdateTask, adminDeleteTask } from '../../api/taskApi';
 import { employeeApi } from '../../api/employeeApi';
+import { departmentApi } from '../../api/departmentApi';
 import { Plus, Edit, Trash2, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 
 export default function AdminTaskPage() {
   const [tasks, setTasks] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState('');
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
@@ -20,12 +23,10 @@ export default function AdminTaskPage() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [taskRes, empRes] = await Promise.all([
+      const [taskRes] = await Promise.all([
         adminGetAllTasks(),
-        employeeApi.getAll(),
       ]);
       setTasks(taskRes.data || []);
-      setEmployees(empRes.data || []);
     } catch (err) {
       console.error('Lỗi tải danh sách công việc:', err);
     } finally {
@@ -33,13 +34,42 @@ export default function AdminTaskPage() {
     }
   };
 
+  const loadDepartments = async () => {
+    try {
+      const res = await departmentApi.getAll();
+      setDepartments(res.data || []);
+    } catch (err) {
+      console.error('Lỗi tải danh sách phòng ban:', err);
+    }
+  };
+
   useEffect(() => {
     loadData();
+    loadDepartments();
   }, []);
+
+  useEffect(() => {
+    const loadEmployeesByDepartment = async () => {
+      if (!selectedDepartmentId) {
+        setEmployees([]);
+        return;
+      }
+      try {
+        const res = await employeeApi.getByDepartment(selectedDepartmentId);
+        setEmployees(res.data || []);
+      } catch (err) {
+        console.error('Lỗi tải danh sách nhân viên theo phòng ban:', err);
+        setEmployees([]);
+      }
+    };
+
+    loadEmployeesByDepartment();
+  }, [selectedDepartmentId]);
 
   const openCreate = () => {
     setEditingTask(null);
     setForm({ title: '', description: '', assigneeId: '', dueDate: '', priority: 'MEDIUM' });
+    setSelectedDepartmentId('');
     setShowModal(true);
   };
 
@@ -52,6 +82,7 @@ export default function AdminTaskPage() {
       dueDate: task.dueDate || '',
       priority: task.priority || 'MEDIUM',
     });
+    setSelectedDepartmentId('');
     setShowModal(true);
   };
 
@@ -119,6 +150,8 @@ export default function AdminTaskPage() {
         return p;
     }
   };
+
+  const filteredEmployees = useMemo(() => employees || [], [employees]);
 
   return (
     <div className="space-y-6">
@@ -299,14 +332,34 @@ export default function AdminTaskPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phòng ban *</label>
+                  <select
+                    value={selectedDepartmentId}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setSelectedDepartmentId(v);
+                      setForm({ ...form, assigneeId: '' });
+                    }}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  >
+                    <option value="">-- Chọn phòng ban --</option>
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name || d.departmentName || `#${d.id}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Nhân viên *</label>
                   <select
                     value={form.assigneeId}
                     onChange={(e) => setForm({ ...form, assigneeId: e.target.value })}
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    disabled={!selectedDepartmentId}
                   >
                     <option value="">-- Chọn nhân viên --</option>
-                    {employees.map((e) => (
+                    {filteredEmployees.map((e) => (
                       <option key={e.id} value={e.id}>
                         {e.fullName || e.username} ({e.employeeCode || e.id})
                       </option>
