@@ -291,7 +291,6 @@ export default function EmployeeLeave() {
                   };
 
                   const status = leave.status;
-                  const typeLabel = typeMap[status?.toUpperCase()] || leave.leaveType || leave.type;
 
                   return (
                     <tr key={leave.id} className="border-b hover:bg-gray-50">

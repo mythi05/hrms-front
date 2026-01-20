@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { DollarSign, TrendingUp, Download, Eye } from 'lucide-react';
+import { Download, Eye } from 'lucide-react';
 import { getMyCurrentPayroll, getMyPayrollHistory, downloadPayslip } from '../../api/payrollApi';
 
 export default function EmployeePayroll() {

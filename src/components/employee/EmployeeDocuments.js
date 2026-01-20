@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import '../../styles/documents.css';
 import axiosInstance from '../../api/axios';
 
@@ -8,7 +8,6 @@ export const EmployeeDocuments = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [documents, setDocuments] = useState([]);
-  const [loading, setLoading] = useState(false);
 
   const categories = [
     { id: 'all', name: 'Tất cả tài liệu', icon: '📁', count: documents.length },
@@ -19,12 +18,7 @@ export const EmployeeDocuments = () => {
     { id: 'shared', name: 'Được chia sẻ', icon: '🔗', count: documents.filter(d => d.category === 'shared').length },
   ];
 
-  useEffect(() => {
-    fetchDocuments();
-  }, [activeCategory, searchQuery]);
-
-  const fetchDocuments = async () => {
-    setLoading(true);
+  const fetchDocuments = useCallback(async () => {
     try {
       const res = await axiosInstance.get('/documents', {
         params: { category: activeCategory, search: searchQuery }
@@ -33,8 +27,11 @@ export const EmployeeDocuments = () => {
     } catch (err) {
       console.error('Load employee documents error', err);
     }
-    setLoading(false);
-  };
+  }, [activeCategory, searchQuery]);
+
+  useEffect(() => {
+    fetchDocuments();
+  }, [fetchDocuments]);
 
   const downloadFile = (id) => {
     (async () => {
@@ -46,7 +43,7 @@ export const EmployeeDocuments = () => {
         let filename = 'file';
         const cd = res.headers['content-disposition'];
         if (cd) {
-          const match = cd.match(/filename=\"?([^\";]+)\"?/);
+          const match = cd.match(/filename="?([^";]+)"?/);
           if (match) filename = match[1];
         }
 
