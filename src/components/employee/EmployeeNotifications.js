@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { AlertTriangle, Loader2, CheckCircle2, Bell } from 'lucide-react';
 import { getMyNotifications, markNotificationRead } from '../../api/notificationApi';
 import '../../styles/EmployeeNotifications.css';
@@ -7,7 +7,8 @@ export default function EmployeeNotifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const load = async () => {
+  // ✅ FIX: useCallback
+  const load = useCallback(async () => {
     try {
       setLoading(true);
       const res = await getMyNotifications();
@@ -17,22 +18,23 @@ export default function EmployeeNotifications() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleMarkRead = async (id) => {
     try {
       await markNotificationRead(id);
-      setNotifications(prev =>
-        prev.map(n => (n.id === id ? { ...n, readFlag: true } : n))
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, readFlag: true } : n))
       );
     } catch (e) {
       console.error('Lỗi cập nhật thông báo:', e);
     }
   };
 
+  // ✅ FIX: thêm dependency
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   return (
     <div className="notifications-container">
@@ -67,14 +69,12 @@ export default function EmployeeNotifications() {
                 key={n.id}
                 className={`notification-item ${n.readFlag ? 'read' : 'unread'}`}
               >
-                {/* Status icon */}
                 <div className="notification-status">
                   <div className={`status-icon ${n.readFlag ? 'read' : 'unread'}`}>
                     <Bell className="bell-icon" />
                   </div>
                 </div>
 
-                {/* Content */}
                 <div className="notification-content">
                   <div className="notification-header-row">
                     <h2 className="notification-title">{n.title}</h2>
@@ -87,7 +87,6 @@ export default function EmployeeNotifications() {
                   <p className="notification-message">{n.message}</p>
                 </div>
 
-                {/* Action */}
                 {!n.readFlag && (
                   <button
                     onClick={() => handleMarkRead(n.id)}
