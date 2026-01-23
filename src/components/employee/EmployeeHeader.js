@@ -42,7 +42,7 @@ export default function EmployeeHeader({ isMobile, onOpenSidebar }) {
           {isMobile && (
             <button
               type="button"
-              aria-label="Open sidebar"
+              aria-label="Mở menu"
               onClick={() => {
                 console.log('EmployeeHeader menu button clicked!');
                 onOpenSidebar && onOpenSidebar();

@@ -8,6 +8,8 @@ export const EmployeeDocuments = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [documents, setDocuments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const categories = [
     { id: 'all', name: 'Tất cả tài liệu', icon: '📁', count: documents.length },
@@ -19,13 +21,19 @@ export const EmployeeDocuments = () => {
   ];
 
   const fetchDocuments = useCallback(async () => {
+    setError('');
+    setLoading(true);
     try {
       const res = await axiosInstance.get('/documents', {
         params: { category: activeCategory, search: searchQuery }
       });
-      setDocuments(res.data);
+      setDocuments(res?.data || []);
     } catch (err) {
-      console.error('Load employee documents error', err);
+      console.error('Lỗi tải danh sách tài liệu:', err);
+      setError(err?.response?.data?.message || 'Không thể tải danh sách tài liệu');
+      setDocuments([]);
+    } finally {
+      setLoading(false);
     }
   }, [activeCategory, searchQuery]);
 
@@ -60,7 +68,8 @@ export const EmployeeDocuments = () => {
           window.location.href = '/login';
           return;
         }
-        console.error('Download error', err);
+        alert(err?.response?.data?.message || 'Không thể tải tài liệu');
+        console.error('Lỗi tải file:', err);
       }
     })();
   };
@@ -78,7 +87,8 @@ export const EmployeeDocuments = () => {
         window.location.href = '/login';
         return;
       }
-      console.error('View error', err);
+      alert(err?.response?.data?.message || 'Không thể xem tài liệu');
+      console.error('Lỗi xem file:', err);
     }
   };
 
@@ -229,7 +239,19 @@ export const EmployeeDocuments = () => {
             </select>
           </div>
 
-          {filteredDocuments.length === 0 ? (
+          {loading ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">⏳</div>
+              <h3>Đang tải tài liệu...</h3>
+              <p>Vui lòng chờ trong giây lát</p>
+            </div>
+          ) : error ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">⚠️</div>
+              <h3>Không thể tải tài liệu</h3>
+              <p>{error}</p>
+            </div>
+          ) : filteredDocuments.length === 0 ? (
             <div className="empty-state">
               <div className="empty-state-icon">📭</div>
               <h3>Không tìm thấy tài liệu</h3>
@@ -244,6 +266,7 @@ export const EmployeeDocuments = () => {
                   </div>
 
                   <div className="card-actions">
+                    <button onClick={() => viewFile(doc.id)} title="Xem">👁️</button>
                     <button onClick={() => downloadFile(doc.id)}>⬇️</button>
                   </div>
 

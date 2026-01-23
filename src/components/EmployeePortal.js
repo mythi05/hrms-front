@@ -11,7 +11,6 @@ import EmployeeNotifications from './employee/EmployeeNotifications';
 import EmployeeSettings from './employee/EmployeeSettings';
 import { EmployeeSidebar } from './employee/EmployeeSidebar';
 import EmployeeDocuments from './employee/EmployeeDocuments';
-import { Menu } from 'lucide-react';
 
 export default function EmployeePortal() {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -52,7 +51,7 @@ export default function EmployeePortal() {
       {isMobile && mobileSidebarOpen && (
         <button
           type="button"
-          aria-label="Close sidebar"
+          aria-label="Đóng menu"
           onClick={() => setMobileSidebarOpen(false)}
           className="fixed inset-0 z-40 bg-black/40"
         />
@@ -86,10 +85,6 @@ export default function EmployeePortal() {
           {currentPage === 'performance' && <EmployeePerformance />}
           {currentPage === 'notifications' && <EmployeeNotifications />}
           {currentPage === 'documents' && <EmployeeDocuments />}
-          {currentPage === 'performance' && <EmployeePerformance />}
-          {currentPage === 'notifications' && <EmployeeNotifications  />}
-
-
           {currentPage === 'settings' && <EmployeeSettings />}
           
         

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import "../../styles/documents.css";
 import axiosInstance from "../../api/axios";
+import { employeeApi } from "../../api/employeeApi";
 
 export const AdminDocuments = () => {
   const [viewMode, setViewMode] = useState("grid");
@@ -13,10 +14,24 @@ export const AdminDocuments = () => {
     important: 0
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const fileInputRef = useRef(null);
   const [uploadVisibility, setUploadVisibility] = useState('PUBLIC');
   const [uploadUser, setUploadUser] = useState('');
+  const [employees, setEmployees] = useState([]);
+  const [loadingEmployees, setLoadingEmployees] = useState(false);
+
+  /* ================= LOAD EMPLOYEES ================= */
+  useEffect(() => {
+    if (uploadVisibility === 'USER') {
+      setLoadingEmployees(true);
+      employeeApi.getAll()
+        .then(res => setEmployees(res?.data || []))
+        .catch(err => console.error('Lỗi tải danh sách nhân viên:', err))
+        .finally(() => setLoadingEmployees(false));
+    }
+  }, [uploadVisibility]);
 
   /* ================= LOAD DOCUMENTS ================= */
   useEffect(() => {
@@ -25,6 +40,7 @@ export const AdminDocuments = () => {
 
   const fetchDocuments = async () => {
     setLoading(true);
+    setError("");
     try {
       const res = await axiosInstance.get("/documents", {
         params: {
@@ -32,9 +48,11 @@ export const AdminDocuments = () => {
           search: searchQuery
         }
       });
-      setDocuments(res.data);
+      setDocuments(res?.data || []);
     } catch (err) {
-      console.error("Load documents error", err);
+      console.error("Lỗi tải danh sách tài liệu:", err);
+      setError(err?.response?.data?.message || "Không thể tải danh sách tài liệu");
+      setDocuments([]);
     }
     setLoading(false);
   };
@@ -76,7 +94,8 @@ export const AdminDocuments = () => {
       fetchDocuments();
       fetchStats();
     } catch (err) {
-      console.error("Upload error", err);
+      alert(err?.response?.data?.message || "Không thể tải lên tài liệu");
+      console.error("Lỗi upload tài liệu:", err);
     }
   };
 
@@ -88,7 +107,8 @@ export const AdminDocuments = () => {
       fetchDocuments();
       fetchStats();
     } catch (err) {
-      console.error("Delete error", err);
+      alert(err?.response?.data?.message || "Không thể xoá tài liệu");
+      console.error("Lỗi xoá tài liệu:", err);
     }
   };
 
@@ -131,7 +151,8 @@ const downloadFile = async (id) => {
       alert("Bạn không có quyền tải tài liệu này");
       return;
     }
-    console.error("Download error", err);
+    alert(err?.response?.data?.message || "Không thể tải tài liệu");
+    console.error("Lỗi tải file:", err);
   }
 };
 
@@ -162,7 +183,8 @@ const viewFile = async (id) => {
       alert("Bạn không có quyền xem tài liệu này");
       return;
     }
-    console.error("View error", err);
+    alert(err?.response?.data?.message || "Không thể xem tài liệu");
+    console.error("Lỗi xem tài liệu:", err);
   }
 };
 
@@ -186,12 +208,12 @@ const viewFile = async (id) => {
   };
 
   const categories = [
-    { id: "all", name: "Tất cả tài liệu", icon: "📁" },
-    { id: "company", name: "Công ty", icon: "🏢" },
-    { id: "hr", name: "Nhân sự", icon: "👥" },
-    { id: "finance", name: "Tài chính", icon: "💰" },
-    { id: "training", name: "Đào tạo", icon: "📚" },
-    { id: "policies", name: "Chính sách", icon: "📋" }
+    { id: "all", name: "Tất cả tài liệu", icon: "📁", count: documents.length },
+    { id: "company", name: "Công ty", icon: "🏢", count: documents.filter(d => d.category === 'company').length },
+    { id: "hr", name: "Nhân sự", icon: "👥", count: documents.filter(d => d.category === 'hr').length },
+    { id: "finance", name: "Tài chính", icon: "💰", count: documents.filter(d => d.category === 'finance').length },
+    { id: "training", name: "Đào tạo", icon: "📚", count: documents.filter(d => d.category === 'training').length },
+    { id: "policies", name: "Chính sách", icon: "📋", count: documents.filter(d => d.category === 'policies').length }
   ];
 
   return (
@@ -202,9 +224,9 @@ const viewFile = async (id) => {
 
         <div className="header-actions">
           <div className="search-box">
-            🔍
+        
             <input
-              placeholder="Tìm kiếm tài liệu..."
+              placeholder="🔍 Tìm kiếm tài liệu..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -218,7 +240,20 @@ const viewFile = async (id) => {
               <option value="USER">Một người cụ thể</option>
             </select>
             {uploadVisibility === 'USER' && (
-              <input placeholder="username" value={uploadUser} onChange={e => setUploadUser(e.target.value)} />
+              loadingEmployees ? (
+                <select disabled>
+                  <option>Đang tải...</option>
+                </select>
+              ) : (
+                <select value={uploadUser} onChange={e => setUploadUser(e.target.value)}>
+                  <option value="">-- Chọn nhân viên --</option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.username}>
+                      {emp.fullName || emp.username}
+                    </option>
+                  ))}
+                </select>
+              )
             )}
 
             <button
@@ -262,10 +297,14 @@ const viewFile = async (id) => {
             {categories.map((c) => (
               <li
                 key={c.id}
-                className={activeCategory === c.id ? "active" : ""}
+                className={`category-item ${activeCategory === c.id ? "active" : ""}`}
                 onClick={() => setActiveCategory(c.id)}
               >
-                {c.icon} {c.name}
+                <div>
+                  <span className="category-icon">{c.icon}</span>
+                  {c.name}
+                </div>
+                <span className="category-count">{c.count}</span>
               </li>
             ))}
           </ul>
@@ -274,28 +313,51 @@ const viewFile = async (id) => {
         {/* ================= CONTENT ================= */}
         <main className="documents-content">
           <div className="view-toggle">
-            <button
-              className={viewMode === "grid" ? "active" : ""}
-              onClick={() => setViewMode("grid")}
-            >
-              ⊞ Lưới
-            </button>
-            <button
-              className={viewMode === "list" ? "active" : ""}
-              onClick={() => setViewMode("list")}
-            >
-              ☰ Danh sách
-            </button>
+            <div className="view-buttons">
+              <button
+                className={`view-btn ${viewMode === "grid" ? "active" : ""}`}
+                onClick={() => setViewMode("grid")}
+              >
+                ⊞ Lưới
+              </button>
+              <button
+                className={`view-btn ${viewMode === "list" ? "active" : ""}`}
+                onClick={() => setViewMode("list")}
+              >
+                ☰ Danh sách
+              </button>
+            </div>
           </div>
 
           {loading ? (
-            <p>Đang tải...</p>
+            <div className="empty-state">
+              <div className="empty-state-icon">⏳</div>
+              <h3>Đang tải tài liệu...</h3>
+              <p>Vui lòng chờ trong giây lát</p>
+            </div>
+          ) : error ? (
+            <div className="empty-state">
+              <div className="empty-state-icon">⚠️</div>
+              <h3>Không thể tải tài liệu</h3>
+              <p>{error}</p>
+            </div>
           ) : documents.length === 0 ? (
-            <div className="empty-state">📭 Không có tài liệu</div>
+            <div className="empty-state">
+              <div className="empty-state-icon">📭</div>
+              <h3>Không có tài liệu</h3>
+            </div>
           ) : viewMode === "grid" ? (
             <div className="documents-grid">
               {documents.map((doc) => (
                 <div key={doc.id} className="document-card">
+                  <div className="document-actions">
+                    <button className="action-menu-btn">⋮</button>
+                  </div>
+                  <div className="card-actions">
+                    <button onClick={() => viewFile(doc.id)} title="Xem">👁️</button>
+                    <button onClick={() => downloadFile(doc.id)}>⬇️</button>
+                    <button onClick={() => deleteFile(doc.id)}>🗑️</button>
+                  </div>
                   <div className={`document-icon ${doc.fileType}`}>
                     {getDocumentIcon(doc.fileType)}
                   </div>
@@ -314,12 +376,6 @@ const viewFile = async (id) => {
                   </p>
 
                   <p>Bởi: {doc.uploadedBy}</p>
-
-                  <div className="card-actions">
-                    <button onClick={() => viewFile(doc.id)} title="Xem">👁️</button>
-                    <button onClick={() => downloadFile(doc.id)} title="Tải về">⬇️</button>
-                    <button onClick={() => deleteFile(doc.id)} title="Xóa">🗑️</button>
-                  </div>
                 </div>
               ))}
             </div>

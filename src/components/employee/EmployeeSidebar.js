@@ -61,7 +61,7 @@ export function EmployeeSidebar({ currentPage, setCurrentPage, collapsed, setCol
       {isMobile && mobileOpen && (
         <button
           type="button"
-          aria-label="Close sidebar"
+          aria-label="Đóng menu"
           onClick={() => {
             console.log('Employee overlay clicked!');
             setMobileOpen(false);
@@ -89,7 +89,7 @@ export function EmployeeSidebar({ currentPage, setCurrentPage, collapsed, setCol
                 console.log('Employee sidebar close button called setMobileOpen(false)');
               }}
               className="p-1 hover:bg-green-600 rounded z-50 relative bg-red-500 border-2 border-yellow-400"
-              aria-label="Close sidebar"
+              aria-label="Đóng menu"
             >
               <X size={20} className="text-white" />
             </button>
@@ -105,7 +105,7 @@ export function EmployeeSidebar({ currentPage, setCurrentPage, collapsed, setCol
             <button
               onClick={() => setCollapsed(!collapsed)}
               className="p-1 hover:bg-green-600 rounded"
-              aria-label="Toggle collapse"
+              aria-label="Thu gọn/mở rộng menu"
             >
               {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
             </button>

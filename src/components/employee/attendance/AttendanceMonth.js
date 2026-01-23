@@ -75,7 +75,7 @@ export default function EmployeeAttendance() {
         <p className="text-gray-600">Quản lý thời gian làm việc của bạn</p>
       </div>
 
-      {/* Check In/Out Card */}
+      {/* Chấm công vào/ra */}
       <div className="bg-gradient-to-br from-green-500 to-green-700 rounded-lg shadow-lg p-8 text-white">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2">
@@ -96,11 +96,11 @@ export default function EmployeeAttendance() {
           {/* Trạng thái hôm nay */}
           <div className="space-y-4">
             <div className="bg-white/10 rounded-lg p-4">
-              <div className="text-green-100 text-sm mb-1">Check In</div>
+              <div className="text-green-100 text-sm mb-1">Giờ vào</div>
               <div className="text-2xl font-bold">{checkInTime}</div>
             </div>
             <div className="bg-white/10 rounded-lg p-4">
-              <div className="text-green-100 text-sm mb-1">Check Out</div>
+              <div className="text-green-100 text-sm mb-1">Giờ ra</div>
               <div className="text-2xl font-bold">{checkOutTime}</div>
             </div>
             <div className="bg-white/10 rounded-lg p-4">

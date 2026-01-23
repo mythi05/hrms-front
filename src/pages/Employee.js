@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import axiosInstance from "../api/axios"; // axios đã có interceptor gắn token
+import axiosInstance from "../api/axios"; 
 import { 
   UserPlus, X, Search, Edit2, Trash2, Eye, User, Shield, Briefcase, FileText, Award,
-  Calendar, Clock, AlertCircle, TrendingUp, DollarSign
+  Calendar, Clock, AlertCircle, TrendingUp, DollarSign, Upload, Image as ImageIcon
 } from "lucide-react";
 import { departmentApi } from "../api/departmentApi";
 import { employeeApi } from "../api/employeeApi";
@@ -13,542 +13,308 @@ export default function Employee() {
   const [departments, setDepartments] = useState([]);
   const [employeeStats, setEmployeeStats] = useState({});
   const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState("add"); // add, edit, view
+  const [modalMode, setModalMode] = useState("add"); 
   const [searchTerm, setSearchTerm] = useState("");
   const [deleteId, setDeleteId] = useState(null);
-  const [loadingStats, setLoadingStats] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [form, setForm] = useState({
+  const [importing, setImporting] = useState(false);
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState(() => new Set());
+
+  const defaultForm = {
     fullName: "", email: "", phone: "", dob: "", address: "", position: "", departmentId: "",
     startDate: "", managerName: "", contractType: "", contractEndDate: "",
     experienceYears: 0, grade: "", performanceRate: 0, employeeCode: "",
-    salary: "", username: "", password: "", role: "EMPLOYEE", skills: [], certificates: []
-  });
+    salary: "", username: "", password: "", role: "EMPLOYEE", 
+    skills: [], certificates: [], avatar: "",
+    emailNotifications: true, pushNotifications: true, leaveNotifications: true, payrollNotifications: true
+  };
 
-  useEffect(() => { 
-    loadEmployees(); 
-    loadDepartments();
-  }, []);
+  const [form, setForm] = useState(defaultForm);
 
-  useEffect(() => {
-    if (employees.length > 0) {
-      loadEmployeeStats();
-    }
-  }, [employees, currentMonth, currentYear]);
+  useEffect(() => { loadEmployees(); loadDepartments(); }, []);
+  useEffect(() => { if (employees.length > 0) loadEmployeeStats(); }, [employees, currentMonth, currentYear]);
 
-  // Load thống kê cho tất cả nhân viên
-  const loadEmployeeStats = async () => {
-    setLoadingStats(true);
-    const stats = {};
-    
-    for (const employee of employees) {
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSelectedAvatarFile(file);
+
+    // preview local ngay cho UI gọn đẹp
+    const localUrl = URL.createObjectURL(file);
+    setForm(prev => ({ ...prev, avatar: localUrl }));
+
+    // Nếu đang edit thì upload luôn lên backend để lưu URL/publicId đúng chuẩn nghiệp vụ
+    if (modalMode !== "add" && form?.id) {
+      setIsUploading(true);
       try {
-        const res = await getAttendanceOfMonth(employee.id, currentMonth, currentYear);
-        const attendanceData = res.data || [];
-        
-        let workedDays = 0;
-        let lateDays = 0;
-        let leaveDays = 0;
-        
-        attendanceData.forEach(record => {
-          if (record.status === 'PRESENT' || record.status === 'LATE') {
-            workedDays++;
-          }
-          if (record.status === 'LATE') {
-            lateDays++;
-          }
-          if (record.status === 'LEAVE' || record.status === 'ABSENT') {
-            leaveDays++;
-          }
-        });
-        
-        stats[employee.id] = {
-          workedDays,
-          lateDays,
-          leaveDays,
-          salary: employee.salary || 0
-        };
-      } catch (error) {
-        // Nếu không có data chấm công, set default values
-        stats[employee.id] = {
-          workedDays: 0,
-          lateDays: 0,
-          leaveDays: 0,
-          salary: employee.salary || 0
-        };
+        const res = await employeeApi.updateAvatar(form.id, file);
+        setForm(prev => ({ ...prev, ...res.data }));
+        setSelectedAvatarFile(null);
+      } catch (err) {
+        alert(err.response?.data?.message || "Lỗi upload ảnh!");
+      } finally {
+        setIsUploading(false);
       }
     }
-    
+  };
+
+  const loadEmployeeStats = async () => {
+    const stats = {};
+    for (const e of employees) {
+      try {
+        const res = await getAttendanceOfMonth(e.id, currentMonth, currentYear);
+        const data = res.data || [];
+        let worked = 0, late = 0, leave = 0;
+        data.forEach(r => {
+          if (r.status === 'PRESENT' || r.status === 'LATE') worked++;
+          if (r.status === 'LATE') late++;
+          if (r.status === 'LEAVE' || r.status === 'ABSENT') leave++;
+        });
+        stats[e.id] = { worked, late, leave, salary: e.salary || 0 };
+      } catch (err) { stats[e.id] = { worked: 0, late: 0, leave: 0, salary: e.salary || 0 }; }
+    }
     setEmployeeStats(stats);
-    setLoadingStats(false);
   };
 
-  const getDepartmentName = (departmentId) => {
-    const dept = departments.find(d => d.id === departmentId);
-    return dept ? dept.name : 'Chưa có';
-  };
+  const loadEmployees = async () => { try { const res = await employeeApi.getAll(); setEmployees(res.data); } catch (err) {} };
+  const loadDepartments = async () => { try { const res = await departmentApi.getAll(); setDepartments(res.data); } catch (err) {} };
 
-  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
-
-  // --- Load employees ---
-  const loadEmployees = async () => {
+  const parseFilenameFromDisposition = (value) => {
+    if (!value) return null;
+    // e.g. attachment; filename=nhan_vien_2026-01-23.xlsx
+    const match = /filename\*?=(?:UTF-8''|")?([^;"]+)/i.exec(value);
+    if (!match) return null;
     try {
-      const res = await employeeApi.getAll();
-      setEmployees(res.data);
-    } catch (err) {
-      handleUnauthorized(err);
+      return decodeURIComponent(match[1].trim().replace(/^"|"$/g, ""));
+    } catch (_) {
+      return match[1].trim().replace(/^"|"$/g, "");
     }
   };
 
-  // --- Load departments ---
-  const loadDepartments = async () => {
-    try {
-      const res = await departmentApi.getAll();
-      setDepartments(res.data);
-    } catch (err) {
-      console.error("Error loading departments:", err);
-    }
-  };
-
-  // --- Add/Edit modal ---
-  const openAddModal = () => {
-    setModalMode("add");
-    setForm({
-      fullName: "", email: "", phone: "", dob: "", address: "", position: "", departmentId: "",
-      startDate: "", managerName: "", contractType: "", contractEndDate: "",
-      experienceYears: 0, grade: "", performanceRate: 0, employeeCode: "",
-      salary: "", username: "", password: "", role: "EMPLOYEE", skills: [], certificates: []
-    });
-    setShowModal(true);
-  };
-
-const openEditModal = (employee, mode = "edit") => {
-  setModalMode(mode);
-  setForm({
-    ...employee,
-    departmentId: employee.departmentId || "",
-    dob: employee.dob ? employee.dob.split("T")[0] : "",
-    startDate: employee.startDate ? employee.startDate.split("T")[0] : "",
-    contractEndDate: employee.contractEndDate ? employee.contractEndDate.split("T")[0] : "",
-    password: "",
-    role: employee.role || "EMPLOYEE" // fallback nếu role null
-  });
-  setShowModal(true);
-};
-
-
-  // --- Submit employee ---
-const prepareEmployeeData = (form, modalMode) => {
-  const data = {
-    fullName: form.fullName,
-    email: form.email,
-    phone: form.phone,
-    dob: form.dob || null,
-    address: form.address,
-    position: form.position,
-    departmentId: form.departmentId ? Number(form.departmentId) : null,
-    startDate: form.startDate || null,
-    managerName: form.managerName,
-    contractType: form.contractType,
-    contractEndDate: form.contractEndDate || null,
-    experienceYears: Number(form.experienceYears || 0),
-    grade: form.grade,
-    performanceRate: Number(form.performanceRate || 0),
-    employeeCode: form.employeeCode,
-    salary: Number(form.salary || 0),
-    username: form.username,
-    role: form.role || "EMPLOYEE", // fallback nếu role null
-    skills: form.skills.map(s => ({ name: s.name, level: s.level })),
-    certificates: form.certificates || []
-  };
-
-  // Nếu là edit và password để trống, bỏ trường password
-  if (modalMode === "edit" && !form.password) delete data.password;
-  else data.password = form.password;
-
-  return data;
-};
-
-// Sử dụng trước khi POST
-const submitEmployee = async () => {
-  try {
-    const data = prepareEmployeeData(form, modalMode);
-    if (modalMode === "add") await employeeApi.create(data);
-    else await employeeApi.update(form.id, data);
-
-    alert(modalMode === "add" ? "Thêm nhân viên thành công!" : "Cập nhật thành công!");
-    setShowModal(false);
-    loadEmployees();
-  } catch (err) {
-    alert(err.response?.data?.message || "Có lỗi xảy ra!");
-  }
-};
-
-
-
-  // --- Delete employee ---
-  const deleteEmployee = async (id) => {
-    try {
-      await employeeApi.delete(id);
-      alert("Xóa thành công!");
-      loadEmployees();
-    } catch (err) {
-      handleUnauthorized(err);
-    }
-  };
-
-  const handleUnauthorized = (err) => {
-    if (err.response?.status === 401) {
-      alert("Bạn chưa đăng nhập hoặc token hết hạn. Vui lòng đăng nhập lại.");
-      window.location.href = "/admin/login";
-    } else {
-      alert("Không thể tải dữ liệu nhân viên!");
-    }
-  };
-
-  // --- Filter & display ---
-  const filteredEmployees = employees.filter(e =>
-    e.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    e.position?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const getRoleBadge = role => ({
-    ADMIN: "bg-purple-100 text-purple-700",
-    HR: "bg-blue-100 text-blue-700",
-    EMPLOYEE: "bg-gray-100 text-gray-700"
-  }[role] || "bg-gray-100 text-gray-700");
-
-  const fmtDate = d => d ? new Date(d).toLocaleDateString('vi-VN') : "—";
-
-  const exportEmployeesCsv = () => {
-    if (!employees || employees.length === 0) {
-      alert("Không có dữ liệu nhân viên để xuất.");
-      return;
-    }
-    const headers = [
-      "id","fullName","email","phone","dob","address","position","department","startDate","managerName",
-      "contractType","contractEndDate","experienceYears","grade","performanceRate","employeeCode","salary","username","role"
-    ];
-
-    const rows = filteredEmployees.map(e => [
-      e.id,
-      e.fullName || "",
-      e.email || "",
-      e.phone || "",
-      e.dob || "",
-      e.address || "",
-      e.position || "",
-      getDepartmentName(e.departmentId) || "",
-      e.startDate || "",
-      e.managerName || "",
-      e.contractType || "",
-      e.contractEndDate || "",
-      e.experienceYears ?? "",
-      e.grade || "",
-      e.performanceRate ?? "",
-      e.employeeCode || "",
-      e.salary ?? "",
-      e.username || "",
-      e.role || ""
-    ]);
-
-    const csv = [headers.join(","), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const downloadBlob = (blob, filename) => {
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
-    a.download = "employees.csv";
+    a.download = filename;
     document.body.appendChild(a);
     a.click();
     a.remove();
     window.URL.revokeObjectURL(url);
   };
 
-  const importEmployeesCsv = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const text = e.target?.result;
-        if (typeof text !== 'string') return;
-        const lines = text.split(/\r?\n/).filter(l => l.trim());
-        if (lines.length < 2) {
-          alert("File không có dữ liệu.");
-          return;
-        }
-        const header = lines[0].split(",").map(h => h.replace(/"/g, '').trim());
-        const idx = (name) => header.indexOf(name);
-
-        for (let i = 1; i < lines.length; i++) {
-          const cols = lines[i].match(/("[^"]*"|[^,]+)/g);
-          if (!cols) continue;
-          const val = (name) => {
-            const j = idx(name);
-            if (j === -1 || j >= cols.length) return "";
-            return cols[j].replace(/^"|"$/g, '').replace(/""/g, '"').trim();
-          };
-
-          const payload = {
-            fullName: val("fullName"),
-            email: val("email"),
-            phone: val("phone"),
-            dob: val("dob") || null,
-            address: val("address"),
-            position: val("position"),
-            departmentId: val("departmentId") ? Number(val("departmentId")) : null,
-            startDate: val("startDate") || null,
-            managerName: val("managerName"),
-            contractType: val("contractType"),
-            contractEndDate: val("contractEndDate") || null,
-            experienceYears: Number(val("experienceYears") || 0),
-            grade: val("grade"),
-            performanceRate: Number(val("performanceRate") || 0),
-            employeeCode: val("employeeCode"),
-            salary: Number(val("salary") || 0),
-            username: val("username"),
-            role: val("role") || "EMPLOYEE",
-            password: "123456", // mật khẩu mặc định
-            skills: [],
-            certificates: [],
-          };
-
-          // Luôn tạo nhân viên mới để tránh ghi đè/mất nhân viên cũ
-          try {
-            await employeeApi.create(payload);
-          } catch (rowErr) {
-            console.error("Lỗi import nhân viên ở dòng", i + 1, rowErr);
-            // Tiếp tục các dòng khác
-            continue;
-          }
-        }
-
-        alert("Import nhân viên thành công (các dòng lỗi đã được bỏ qua).");
-        loadEmployees();
-      } catch (err) {
-        console.error("Lỗi import CSV nhân viên:", err);
-        alert("Không thể import dữ liệu nhân viên.");
-      } finally {
-        event.target.value = "";
-      }
-    };
-
-    reader.readAsText(file, 'utf-8');
+  const ensureBlobOkOrThrow = async (res) => {
+    const contentType = res?.headers?.['content-type'] || res?.headers?.get?.('content-type') || '';
+    // If backend returns JSON error, content-type may be application/json
+    if (String(contentType).toLowerCase().includes('application/json')) {
+      const text = await (res.data?.text ? res.data.text() : new Response(res.data).text());
+      throw new Error(text || 'Request failed');
+    }
   };
 
-  return (
-    <div className="space-y-6">
+  const handleExportEmployees = async () => {
+    try {
+      const res = await employeeApi.exportEmployees();
+      await ensureBlobOkOrThrow(res);
+      const filename =
+        parseFilenameFromDisposition(res?.headers?.['content-disposition'])
+        || `nhan_vien_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      downloadBlob(res.data, filename);
+    } catch (err) {
+      alert(err?.response?.data?.message || err?.message || 'Không thể xuất danh sách nhân viên');
+    }
+  };
 
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="mb-2">Quản lý Nhân viên</h1>
-          <p className="text-gray-600">Danh sách tất cả nhân viên trong hệ thống</p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            className="flex items-center gap-2 border px-4 py-2 rounded-lg text-sm hover:bg-gray-50"
-            onClick={exportEmployeesCsv}
-          >
-            Export CSV
+  const handleDownloadTemplate = async () => {
+    try {
+      const res = await employeeApi.downloadEmployeeTemplate();
+      await ensureBlobOkOrThrow(res);
+      const filename = parseFilenameFromDisposition(res?.headers?.['content-disposition']) || 'template_nhan_vien.xlsx';
+      downloadBlob(res.data, filename);
+    } catch (err) {
+      alert(err?.response?.data?.message || err?.message || 'Không thể tải file mẫu');
+    }
+  };
+
+  const handleImportEmployees = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    try {
+      await employeeApi.importEmployees(file);
+      alert('Nhập danh sách nhân viên thành công!');
+      loadEmployees();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Không thể nhập danh sách nhân viên');
+    } finally {
+      setImporting(false);
+      e.target.value = '';
+    }
+  };
+
+  const submitEmployee = async () => {
+    if (isUploading) return alert("Vui lòng đợi ảnh tải lên xong!");
+    try {
+      const data = {
+        ...form,
+        departmentId: form.departmentId ? Number(form.departmentId) : null,
+        experienceYears: form.experienceYears ? Number(form.experienceYears) : 0,
+        performanceRate: form.performanceRate ? Number(form.performanceRate) : 0,
+        salary: form.salary ? Number(form.salary) : 0,
+      };
+
+      // Khi add: tạo trước, rồi nếu có chọn file avatar thì upload theo id mới
+      if (modalMode === "add") {
+        const createdRes = await employeeApi.create(data);
+        const created = createdRes.data;
+        if (selectedAvatarFile && created?.id) {
+          setIsUploading(true);
+          try {
+            await employeeApi.updateAvatar(created.id, selectedAvatarFile);
+          } finally {
+            setIsUploading(false);
+          }
+        }
+      } else {
+        await employeeApi.update(form.id, data);
+      }
+
+      alert("Thành công!");
+
+      setShowModal(false);
+      setForm(defaultForm);
+      setSelectedAvatarFile(null);
+      loadEmployees();
+    } catch (err) { alert(err.response?.data?.message || "Không thể lưu. Vui lòng kiểm tra trùng Mã nhân viên / Tên đăng nhập."); }
+  };
+
+  const filteredEmployees = employees.filter(e => e.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) || e.employeeCode?.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const totalEmployees = employees.length;
+  const adminCount = employees.filter(e => e.role === 'ADMIN').length;
+  const hrCount = employees.filter(e => e.role === 'HR').length;
+  const empCount = employees.filter(e => e.role === 'EMPLOYEE').length;
+
+  const toggleSelectedEmployee = (id) => {
+    setSelectedEmployeeIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAllEmployees = () => {
+    setSelectedEmployeeIds(prev => {
+      const allIds = filteredEmployees.map(e => e.id);
+      const allSelected = allIds.length > 0 && allIds.every(id => prev.has(id));
+      if (allSelected) return new Set();
+      return new Set(allIds);
+    });
+  };
+
+  const handleBulkDeleteEmployees = async () => {
+    const ids = Array.from(selectedEmployeeIds);
+    if (ids.length === 0) {
+      alert('Bạn chưa chọn nhân viên nào để xoá');
+      return;
+    }
+    if (!window.confirm(`Bạn có chắc muốn xoá ${ids.length} nhân viên đã chọn?`)) return;
+    try {
+      await employeeApi.bulkDeleteEmployees(ids);
+      setSelectedEmployeeIds(new Set());
+      loadEmployees();
+      alert('Đã xoá nhân viên đã chọn');
+    } catch (err) {
+      alert(err?.response?.data?.error || err?.response?.data?.message || 'Không thể xoá nhân viên đã chọn');
+    }
+  };
+
+  const allFilteredSelected = filteredEmployees.length > 0 && filteredEmployees.every(e => selectedEmployeeIds.has(e.id));
+
+  return (
+    <div className="p-6 space-y-6 bg-gray-50 min-h-screen">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-black text-gray-800">QUẢN LÝ NHÂN VIÊN</h1>
+
+        <div className="flex items-center gap-2">
+          <button onClick={handleBulkDeleteEmployees} className="px-4 py-2 rounded-xl font-bold border bg-white hover:bg-gray-50 text-red-600">
+            Xoá đã chọn
           </button>
-          <label className="flex items-center gap-2 border px-4 py-2 rounded-lg text-sm hover:bg-gray-50 cursor-pointer">
-            Import CSV
-            <input type="file" accept=".csv" className="hidden" onChange={importEmployeesCsv} />
+
+          <button onClick={handleDownloadTemplate} className="px-4 py-2 rounded-xl font-bold border bg-white hover:bg-gray-50">
+            Tải file mẫu
+          </button>
+
+          <label className={`px-4 py-2 rounded-xl font-bold border bg-white hover:bg-gray-50 cursor-pointer ${importing ? 'opacity-60 pointer-events-none' : ''}`}>
+            {importing ? 'Đang nhập...' : 'Nhập Excel/CSV'}
+            <input type="file" className="hidden" accept=".xlsx,.xls,.csv" onChange={handleImportEmployees} />
           </label>
-          <button
-            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg shadow hover:bg-blue-700 transition"
-            onClick={openAddModal}
-          >
+
+          <button onClick={handleExportEmployees} className="px-4 py-2 rounded-xl font-bold border bg-white hover:bg-gray-50">
+            Xuất Excel
+          </button>
+
+          <button onClick={() => {
+            setModalMode("add");
+            setForm(defaultForm);
+            setSelectedAvatarFile(null);
+            setShowModal(true);
+          }} className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg hover:bg-blue-700 transition">
             <UserPlus size={20} /> Thêm nhân viên
           </button>
         </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Stat title="Tổng nhân viên" value={employees.length} />
-        <Stat title="Quản trị viên" value={employees.filter(e => e.role === 'ADMIN').length} />
-        <Stat title="Nhân sự" value={employees.filter(e => e.role === 'HR').length} />
-        <Stat title="Nhân viên" value={employees.filter(e => e.role === 'EMPLOYEE').length} />
+        <StatCard title="Tổng nhân viên" value={totalEmployees} />
+        <StatCard title="Quản trị viên" value={adminCount} />
+        <StatCard title="Nhân sự" value={hrCount} />
+        <StatCard title="Nhân viên" value={empCount} />
       </div>
 
-      {/* Search and Month/Year Filter */}
-      <div className="bg-white shadow rounded-lg p-4">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex-1 min-w-[200px] relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-            <input
-              type="text"
-              placeholder="Tìm kiếm theo tên, email, chức vụ..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="flex gap-2 items-center">
-            <label className="text-sm text-gray-600">Tháng:</label>
-            <select
-              value={currentMonth}
-              onChange={(e) => setCurrentMonth(Number(e.target.value))}
-              className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            >
-              {Array.from({length: 12}, (_, i) => (
-                <option key={i+1} value={i+1}>Tháng {i+1}</option>
-              ))}
-            </select>
-            <label className="text-sm text-gray-600">Năm:</label>
-            <select
-              value={currentYear}
-              onChange={(e) => setCurrentYear(Number(e.target.value))}
-              className="px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            >
-              {Array.from({length: 5}, (_, i) => (
-                <option key={i} value={new Date().getFullYear() - i}>{new Date().getFullYear() - i}</option>
-              ))}
-            </select>
-          </div>
+      <div className="bg-white p-4 rounded-xl shadow-sm border flex gap-4 items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+          <input type="text" placeholder="Tìm theo họ tên hoặc mã nhân viên..." className="w-full pl-10 pr-4 py-2 border rounded-lg outline-none focus:ring-2 focus:ring-blue-500" onChange={e => setSearchTerm(e.target.value)} />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-gray-600">Tháng:</span>
+          <select value={currentMonth} onChange={e => setCurrentMonth(Number(e.target.value))} className="border rounded-lg px-3 py-2">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <option key={i + 1} value={i + 1}>{`Tháng ${i + 1}`}</option>
+            ))}
+          </select>
+
+          <span className="text-sm font-bold text-gray-600">Năm:</span>
+          <select value={currentYear} onChange={e => setCurrentYear(Number(e.target.value))} className="border rounded-lg px-3 py-2">
+            {Array.from({ length: 6 }).map((_, i) => {
+              const y = new Date().getFullYear() - 3 + i;
+              return <option key={y} value={y}>{y}</option>;
+            })}
+          </select>
         </div>
       </div>
 
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4">
-          <div className="bg-white w-full max-w-5xl rounded-xl shadow-2xl my-8 flex flex-col max-h-[90vh]">
-
-            {/* Header */}
-            <div className="flex justify-between items-center px-6 py-4 border-b bg-gradient-to-r from-blue-600 to-indigo-600 rounded-t-xl flex-shrink-0">
-              <h2 className="text-white text-lg">
-                {modalMode === "add" ? "Thêm nhân viên mới" : modalMode === "edit" ? "Chỉnh sửa nhân viên" : "Chi tiết nhân viên"}
-              </h2>
-              <button className="p-2 hover:bg-white/20 rounded-lg text-white" onClick={() => setShowModal(false)}>
-                <X size={22} />
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="px-6 py-6 overflow-y-auto flex-1">
-              <div className="space-y-6">
-
-                <Section title="Thông tin cá nhân" icon={<User size={18} className="text-blue-600" />}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField label="Họ và tên" name="fullName" form={form} handleChange={handleChange} modalMode={modalMode} required />
-                    <FormField label="Email" name="email" type="email" form={form} handleChange={handleChange} modalMode={modalMode} required />
-                    <FormField label="Số điện thoại" name="phone" form={form} handleChange={handleChange} modalMode={modalMode} />
-                    <FormField label="Ngày sinh" name="dob" type="date" form={form} handleChange={handleChange} modalMode={modalMode} />
-                    <FormField label="Địa chỉ" name="address" form={form} handleChange={handleChange} modalMode={modalMode} />
-                  </div>
-                </Section>
-
-                <Section title="Thông tin công việc" icon={<Briefcase size={18} className="text-blue-600" />}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField label="Mã nhân viên" name="employeeCode" form={form} handleChange={handleChange} modalMode={modalMode} required />
-                    <FormField label="Chức vụ" name="position" form={form} handleChange={handleChange} modalMode={modalMode} required />
-                    <div>
-                      <label className="block text-gray-700 text-sm mb-2">Phòng ban</label>
-                      <select 
-                        name="departmentId" 
-                        value={form.departmentId || ""} 
-                        onChange={handleChange} 
-                        disabled={modalMode === "view"} 
-                        className={`w-full border border-gray-300 px-3 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition ${modalMode === "view" ? "bg-gray-100 cursor-not-allowed" : "bg-white"}`}
-                      >
-                        <option value="">Chọn phòng ban</option>
-                        {departments.map(dept => (
-                          <option key={dept.id} value={dept.id}>{dept.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <FormField label="Người quản lý" name="managerName" form={form} handleChange={handleChange} modalMode={modalMode} />
-                  </div>
-                </Section>
-
-                <Section title="Thông tin hợp đồng" icon={<FileText size={18} className="text-blue-600" />}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField label="Loại hợp đồng" name="contractType" form={form} handleChange={handleChange} modalMode={modalMode} />
-                    <FormField label="Ngày bắt đầu" name="startDate" type="date" form={form} handleChange={handleChange} modalMode={modalMode} />
-                    <FormField label="Ngày kết thúc HĐ" name="contractEndDate" type="date" form={form} handleChange={handleChange} modalMode={modalMode} />
-                    <FormField label="Lương (VNĐ)" name="salary" type="number" form={form} handleChange={handleChange} modalMode={modalMode} />
-                  </div>
-                </Section>
-
-                <Section title="Đánh giá & Kinh nghiệm" icon={<Award size={18} className="text-blue-600" />}>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <FormField label="Năm kinh nghiệm" name="experienceYears" type="number" form={form} handleChange={handleChange} modalMode={modalMode} />
-                    <FormField label="Xếp loại" name="grade" form={form} handleChange={handleChange} modalMode={modalMode} />
-                    <FormField label="Hiệu suất (%)" name="performanceRate" type="number" form={form} handleChange={handleChange} modalMode={modalMode} />
-                  </div>
-                </Section>
-
-                <Section title="Tài khoản hệ thống" icon={<Shield size={18} className="text-blue-600" />}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField label="Tên đăng nhập" name="username" form={form} handleChange={handleChange} modalMode={modalMode} required />
-                    {modalMode !== "view" && (
-                      <FormField 
-                        label={modalMode === "edit" ? "Mật khẩu mới (để trống nếu không đổi)" : "Mật khẩu"} 
-                        name="password" type="password" form={form} handleChange={handleChange} modalMode={modalMode} required={modalMode === "add"} 
-                      />
-                    )}
-                    <div>
-                      <label className="block text-gray-700 text-sm mb-2">Vai trò</label>
-                      <select name="role" value={form.role} onChange={handleChange} disabled={modalMode === "view"} className={`w-full border px-3 py-2 rounded-lg ${modalMode === "view" ? "bg-gray-100 cursor-not-allowed" : "bg-white"}`}>
-                        <option value="EMPLOYEE">Nhân viên</option>
-                        <option value="HR">Nhân sự</option>
-                        <option value="ADMIN">Quản trị viên</option>
-                      </select>
-                    </div>
-                  </div>
-                </Section>
-
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 flex-shrink-0">
-              <button onClick={() => setShowModal(false)} className="px-5 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-100 transition">
-                {modalMode === "view" ? "Đóng" : "Hủy"}
-              </button>
-              {modalMode !== "view" && (
-                <button onClick={submitEmployee} className="px-5 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition">Lưu</button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirm */}
-      {deleteId && (
-        <div className="fixed inset-0 bg-black/40 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-xl shadow-xl max-w-md w-full mx-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-red-100 rounded-full">
-                <Trash2 className="text-red-600" size={24} />
-              </div>
-              <div>
-                <h3 className="text-gray-900">Xác nhận xóa</h3>
-                <p className="text-gray-600 text-sm">Bạn có chắc muốn xóa nhân viên này?</p>
-              </div>
-            </div>
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setDeleteId(null)} className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">Hủy</button>
-              <button onClick={() => { deleteEmployee(deleteId); setDeleteId(null); }} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Xóa</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Table */}
-      <div className="bg-white shadow rounded-lg overflow-auto">
-        <table className="w-full">
+      <div className="bg-white shadow-2xl rounded-2xl overflow-hidden border border-gray-100">
+        <table className="w-full text-left table-fixed">
           <thead className="bg-gray-50 border-b">
             <tr>
+              <Th>
+                <input
+                  type="checkbox"
+                  checked={allFilteredSelected}
+                  onChange={toggleSelectAllEmployees}
+                />
+              </Th>
               <Th>Mã NV</Th>
-              <Th>Họ tên</Th>
+              <Th>Họ và tên</Th>
               <Th>Email</Th>
-              <Th>Vị trí</Th>
+              <Th>Chức vụ</Th>
               <Th>Đi làm (tháng)</Th>
               <Th>Đi muộn</Th>
               <Th>Nghỉ phép</Th>
@@ -557,110 +323,181 @@ const submitEmployee = async () => {
             </tr>
           </thead>
           <tbody>
-            {filteredEmployees.length === 0 ? (
-              <tr><td colSpan="9" className="py-8 text-center text-gray-400">
-                {loadingStats ? "Đang tải thống kê..." : "Không có nhân viên"}
-              </td></tr>
-            ) : filteredEmployees.map(e => {
-              const stats = employeeStats[e.id] || { workedDays: 0, lateDays: 0, leaveDays: 0, salary: 0 };
-              
+            {filteredEmployees.map(e => {
+              const s = employeeStats[e.id] || { worked: 0, late: 0, leave: 0 };
               return (
-                <tr key={e.id} className="border-b hover:bg-gray-50">
+                <tr key={e.id} className="border-b hover:bg-blue-50/50 transition">
                   <Td>
-                    <div className="font-medium">{e.employeeCode || `#${e.id}`}</div>
-                    <div className="text-xs text-gray-500">{e.username}</div>
+                    <input
+                      type="checkbox"
+                      checked={selectedEmployeeIds.has(e.id)}
+                      onChange={() => toggleSelectedEmployee(e.id)}
+                    />
                   </Td>
+                  <Td><span className="font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded text-xs">{e.employeeCode}</span></Td>
                   <Td>
-                    <div className="font-medium">{e.fullName}</div>
-                    <div className="text-xs text-gray-500">{e.phone}</div>
-                  </Td>
-                  <Td>{e.email}</Td>
-                  <Td>{e.position}</Td>
-                  <Td>
-                    <div className="flex items-center gap-1">
-                      <Calendar className="text-green-600" size={16} />
-                      <span className="font-medium text-green-700">{stats.workedDays} ngày</span>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full overflow-hidden border bg-gray-100">
+                        <img
+                          src={e.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(e.fullName || e.username || '')}&background=random`}
+                          className="w-full h-full object-cover"
+                          alt="avatar"
+                        />
+                      </div>
+                      <div>
+                        <div className="font-black text-gray-800 leading-tight">{e.fullName}</div>
+                        <div className="text-xs text-gray-400 leading-tight">@{e.username}</div>
+                      </div>
                     </div>
                   </Td>
                   <Td>
-                    <div className="flex items-center gap-1">
-                      <Clock className="text-orange-600" size={16} />
-                      <span className="font-medium text-orange-700">{stats.lateDays} lần</span>
-                    </div>
+                    <div className="text-sm text-gray-700">{e.email || '-'}</div>
                   </Td>
+                  <Td><div className="text-sm font-medium">{e.position}</div></Td>
+                  <Td><span className="font-bold text-emerald-600">{s.worked} ngày</span></Td>
+                  <Td><span className="font-bold text-orange-600">{s.late} lần</span></Td>
+                  <Td><span className="font-bold text-blue-600">{s.leave} ngày</span></Td>
+                  <Td><span className="font-black text-blue-600">{(e.salary || 0).toLocaleString()}đ</span></Td>
                   <Td>
-                    <div className="flex items-center gap-1">
-                      <AlertCircle className="text-blue-600" size={16} />
-                      <span className="font-medium text-blue-700">{stats.leaveDays} ngày</span>
+                    <div className="flex gap-2">
+                      <button onClick={() => {
+                        setForm({ ...defaultForm, ...e });
+                        setSelectedAvatarFile(null);
+                        setModalMode("view");
+                        setShowModal(true);
+                      }} className="p-2 bg-gray-100 rounded-lg hover:bg-emerald-100 text-emerald-600 transition"><Eye size={16}/></button>
+                      <button onClick={() => {
+                        setForm({ ...defaultForm, ...e });
+                        setSelectedAvatarFile(null);
+                        setModalMode("edit");
+                        setShowModal(true);
+                      }} className="p-2 bg-gray-100 rounded-lg hover:bg-blue-100 text-blue-600 transition"><Edit2 size={16}/></button>
+                      <button onClick={() => setDeleteId(e.id)} className="p-2 bg-gray-100 rounded-lg hover:bg-red-100 text-red-600 transition"><Trash2 size={16}/></button>
                     </div>
-                  </Td>
-                  <Td>
-                    <div className="flex items-center gap-1">
-                      <DollarSign className="text-green-600" size={16} />
-                      <span className="font-medium">{stats.salary?.toLocaleString('vi-VN')}đ</span>
-                    </div>
-                  </Td>
-                  <Td className="flex gap-2">
-                    <button 
-                      onClick={() => openEditModal(e, "view")} 
-                      className="p-1 text-blue-600 hover:bg-blue-50 rounded" 
-                      title="Xem chi tiết"
-                    >
-                      <Eye size={16} />
-                    </button>
-                    <button 
-                      onClick={() => openEditModal(e, "edit")} 
-                      className="p-1 text-gray-600 hover:bg-gray-50 rounded" 
-                      title="Chỉnh sửa"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button 
-                      onClick={() => setDeleteId(e.id)} 
-                      className="p-1 text-red-600 hover:bg-red-50 rounded" 
-                      title="Xóa"
-                    >
-                      <Trash2 size={16} />
-                    </button>
                   </Td>
                 </tr>
-              );
+              )
             })}
           </tbody>
         </table>
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+          <div className="bg-white w-full max-w-5xl rounded-3xl shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b bg-blue-600 text-white rounded-t-3xl flex justify-between items-center">
+              <h2 className="text-xl font-black uppercase">
+                {modalMode === "add" ? "Thêm nhân viên" : (modalMode === "edit" ? "Cập nhật nhân viên" : "Xem chi tiết nhân viên")}
+              </h2>
+              <button onClick={() => setShowModal(false)}><X size={28} /></button>
+            </div>
+
+            <div className="p-8 overflow-y-auto flex-1 space-y-8">
+              <Section title="Hồ sơ cá nhân & Ảnh" icon={<User className="text-blue-600"/>}>
+                <div className="flex flex-col md:flex-row gap-8 items-center">
+                  <div className="relative group flex-shrink-0">
+                    <div className="w-20 h-20 md:w-24 md:h-24 aspect-square rounded-2xl border-4 border-gray-100 overflow-hidden shadow-xl bg-gray-50 flex items-center justify-center">
+                      {form.avatar ? (
+                        <img src={form.avatar} className="w-full h-full object-cover" style={{ maxWidth: '100%', maxHeight: '100%' }} alt="avatar" />
+                      ) : (
+                        <ImageIcon size={48} className="text-gray-200" />
+                      )}
+                    </div>
+
+                    {modalMode !== "view" && (
+                      <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center rounded-2xl cursor-pointer transition">
+                        {isUploading ? <span className="text-white font-bold">Đang tải...</span> : <Upload className="text-white" />}
+                        <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} />
+                      </label>
+                    )}
+                  </div>
+
+                  <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                    <FormField label="Họ và tên" name="fullName" form={form} handleChange={e => setForm({...form, fullName: e.target.value})} modalMode={modalMode} required />
+                    <FormField label="Email" name="email" form={form} handleChange={e => setForm({...form, email: e.target.value})} modalMode={modalMode} required />
+                    <FormField label="Số điện thoại" name="phone" form={form} handleChange={e => setForm({...form, phone: e.target.value})} modalMode={modalMode} />
+                    <FormField label="Ngày sinh" name="dob" type="date" form={form} handleChange={e => setForm({...form, dob: e.target.value})} modalMode={modalMode} />
+                    <FormField label="Mã nhân viên" name="employeeCode" form={form} handleChange={e => setForm({...form, employeeCode: e.target.value})} modalMode={modalMode} required />
+                    <FormField label="Tên đăng nhập" name="username" form={form} handleChange={e => setForm({...form, username: e.target.value})} modalMode={modalMode} required />
+                    <FormField label="Địa chỉ" name="address" form={form} handleChange={e => setForm({...form, address: e.target.value})} modalMode={modalMode} />
+                  </div>
+                </div>
+              </Section>
+
+              <Section title="Công việc & Hợp đồng" icon={<Briefcase className="text-blue-600"/>}>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField label="Chức vụ" name="position" form={form} handleChange={e => setForm({...form, position: e.target.value})} modalMode={modalMode} />
+                  <FormField label="Lương cơ bản" name="salary" type="number" form={form} handleChange={e => setForm({...form, salary: e.target.value})} modalMode={modalMode} />
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Phòng ban</label>
+                    <select value={form.departmentId} onChange={e => setForm({...form, departmentId: e.target.value})} className="w-full border-2 p-2 rounded-xl">
+                      <option value="">Chọn phòng ban</option>
+                      {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    </select>
+                  </div>
+                  <FormField label="Ngày bắt đầu" name="startDate" type="date" form={form} handleChange={e => setForm({...form, startDate: e.target.value})} modalMode={modalMode} />
+                  <FormField label="Quản lý trực tiếp" name="managerName" form={form} handleChange={e => setForm({...form, managerName: e.target.value})} modalMode={modalMode} />
+                  <FormField label="Loại hợp đồng" name="contractType" form={form} handleChange={e => setForm({...form, contractType: e.target.value})} modalMode={modalMode} />
+                  <FormField label="Ngày kết thúc HĐ" name="contractEndDate" type="date" form={form} handleChange={e => setForm({...form, contractEndDate: e.target.value})} modalMode={modalMode} />
+                </div>
+              </Section>
+
+              <Section title="Hiệu suất" icon={<TrendingUp className="text-blue-600"/>}>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField label="Đánh giá hiệu suất" name="performanceRate" type="number" form={form} handleChange={e => setForm({...form, performanceRate: e.target.value})} modalMode={modalMode} />
+                </div>
+              </Section>
+
+              <Section title="Tài khoản" icon={<Shield className="text-blue-600"/>}>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 mb-1">Quyền truy cập</label>
+                    <select value={form.role || "EMPLOYEE"} onChange={e => setForm({...form, role: e.target.value})} className="w-full border-2 p-2 rounded-xl">
+                      <option value="EMPLOYEE">Nhân viên</option>
+                      <option value="HR">Nhân sự (HR)</option>
+                      <option value="ADMIN">Quản trị (Admin)</option>
+                    </select>
+                  </div>
+                  <FormField label="Mật khẩu (chỉ nhập khi muốn đổi)" name="password" type="password" form={form} handleChange={e => setForm({...form, password: e.target.value})} modalMode={modalMode} />
+                </div>
+              </Section>
+
+
+         
+            </div>
+
+            <div className="p-6 border-t bg-gray-50 flex justify-end gap-4 rounded-b-3xl">
+              <button onClick={() => setShowModal(false)} className="px-6 py-2 border-2 rounded-xl font-bold">Đóng</button>
+              {modalMode !== "view" && <button onClick={submitEmployee} className="px-10 py-2 bg-blue-600 text-white rounded-xl font-bold shadow-lg">Lưu</button>}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-// ===== Components =====
-const Stat = ({ title, value }) => <div className="bg-white rounded-lg shadow p-4"><p className="text-xs text-gray-600">{title}</p><p className="text-lg">{value}</p></div>;
-const Th = ({ children }) => <th className="p-3 text-xs text-gray-600 text-left">{children}</th>;
-const Td = ({ children }) => <td className="p-3 text-gray-700">{children}</td>;
+const Th = ({ children }) => <th className="p-4 text-xs font-black text-gray-400 uppercase tracking-widest">{children}</th>;
+const Td = ({ children }) => <td className="p-4 text-sm text-gray-700 align-middle break-words">{children}</td>;
+
+const StatCard = ({ title, value }) => (
+  <div className="bg-white border rounded-xl p-4 shadow-sm">
+    <div className="text-xs font-black text-gray-400 uppercase tracking-widest">{title}</div>
+    <div className="mt-2 text-2xl font-black text-gray-800">{value}</div>
+  </div>
+);
 
 const Section = ({ title, icon, children }) => (
-  <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
-    <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-300">
-      {icon}
-      <h3 className="text-gray-800">{title}</h3>
+  <div className="border-2 border-gray-100 rounded-2xl p-6 relative">
+    <div className="absolute -top-4 left-6 bg-white px-3 flex items-center gap-2 font-black text-gray-800">
+      {icon} <span>{title}</span>
     </div>
     {children}
   </div>
 );
-
-const FormField = ({ label, name, type = "text", form, handleChange, modalMode, required = false }) => {
-  return (
-    <div>
-      <label className="block text-gray-700 text-sm mb-2">{label}{required && modalMode !== "view" && <span className="text-red-500">*</span>}</label>
-      <input
-        type={type}
-        name={name}
-        value={form[name] || ""}
-        onChange={handleChange}
-        readOnly={modalMode === "view"}
-        className={`w-full border border-gray-300 px-3 py-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition
-          ${modalMode === "view" ? "bg-gray-100 cursor-not-allowed text-gray-600" : "bg-white"}`}
-      />
-    </div>
-  );
-};
+const FormField = ({ label, name, type = "text", form, handleChange, modalMode, required }) => (
+  <div>
+    <label className="block text-sm font-bold text-gray-700 mb-1">{label} {required && "*"}</label>
+    <input type={type} value={form[name] || ""} onChange={handleChange} readOnly={modalMode === "view"} className="w-full border-2 p-2 rounded-xl focus:border-blue-500 outline-none" />
+  </div>
+);

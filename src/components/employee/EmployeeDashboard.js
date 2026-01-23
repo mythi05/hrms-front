@@ -93,11 +93,11 @@ export default function EmployeeDashboard({ setCurrentPage }) {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <QuickAction 
-          title="Check In/Out"
-          subtitle={todayAttendance?.checkIn && !todayAttendance?.checkOut ? "Đã check in" : todayAttendance?.checkOut ? "Đã check out" : "Chưa chấm công"}
+          title="Chấm công"
+          subtitle={todayAttendance?.checkIn && !todayAttendance?.checkOut ? "Đã chấm công vào" : todayAttendance?.checkOut ? "Đã chấm công ra" : "Chưa chấm công"}
           icon={Clock}
           color="blue"
-          buttonText={todayAttendance?.checkIn && !todayAttendance?.checkOut ? "Check Out" : "Check In"}
+          buttonText={todayAttendance?.checkIn && !todayAttendance?.checkOut ? "Chấm công ra" : "Chấm công vào"}
           onClick={() => setCurrentPage('attendance')}
         />
         <QuickAction 

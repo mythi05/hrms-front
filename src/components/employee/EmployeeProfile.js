@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { User, Mail, Phone, MapPin, Calendar, Briefcase, FileText, Edit2, Shield } from "lucide-react";
+import { User, Mail, Phone, MapPin, Calendar, Briefcase, FileText, Shield } from "lucide-react";
 import axiosInstance from "../../api/axios";
 
 export default function EmployeeProfile() {
@@ -28,6 +28,22 @@ export default function EmployeeProfile() {
 
   const fmtDate = (d) => d ? new Date(d).toLocaleDateString("vi-VN") : "—";
 
+  const avatarUrl =
+    profile.avatarUrl ||
+    profile.photoUrl ||
+    profile.avatar ||
+    '';
+
+  const initials = (() => {
+    const s = (profile.fullName || profile.username || '').trim();
+    if (!s) return 'NV';
+    const parts = s.split(/\s+/).filter(Boolean);
+    const first = parts[0]?.[0] || '';
+    const last = parts[parts.length - 1]?.[0] || '';
+    const val = `${first}${last}`.toUpperCase();
+    return val || 'NV';
+  })();
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -42,8 +58,12 @@ export default function EmployeeProfile() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Profile Card */}
         <div className="bg-white rounded-lg shadow p-6 text-center">
-          <div className="w-32 h-32 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center mx-auto mb-4">
-            <User size={64} className="text-white" />
+          <div className="w-32 h-32 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center mx-auto mb-4 overflow-hidden">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={profile.fullName || 'Ảnh đại diện'} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-white text-3xl font-semibold">{initials}</span>
+            )}
           </div>
           <h2 className="mb-2">{profile.fullName}</h2>
           <p className="text-gray-600 mb-1">{profile.position}</p>

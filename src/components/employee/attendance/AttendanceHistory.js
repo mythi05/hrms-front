@@ -57,8 +57,8 @@ const AttendanceHistory = ({ employeeId }) => {
           <thead className="bg-gray-50 border-b">
             <tr>
               <th className="text-left p-4 text-xs text-gray-600">Ngày</th>
-              <th className="text-left p-4 text-xs text-gray-600">Check In</th>
-              <th className="text-left p-4 text-xs text-gray-600">Check Out</th>
+              <th className="text-left p-4 text-xs text-gray-600">Giờ vào</th>
+              <th className="text-left p-4 text-xs text-gray-600">Giờ ra</th>
               <th className="text-left p-4 text-xs text-gray-600">Tổng giờ</th>
               <th className="text-left p-4 text-xs text-gray-600">Trạng thái</th>
               <th className="text-left p-4 text-xs text-gray-600">Ghi chú</th>

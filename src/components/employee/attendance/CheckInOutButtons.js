@@ -44,9 +44,9 @@ const CheckInOutButtons = ({ employeeId, onCheckStatusChange }) => {
     try {
       const res = await checkIn(employeeId);
       await fetchToday();
-      alert(`Check-in thành công lúc ${res.data.checkIn}`);
+      alert(`Chấm công vào thành công lúc ${res.data.checkIn}`);
     } catch (err) {
-      const message = err.response?.data?.message || "Lỗi Check-in: Có thể bạn đã Check-in rồi.";
+      const message = err.response?.data?.message || "Không thể chấm công vào: có thể bạn đã chấm công vào rồi.";
       alert(message);
       setError(message);
     }
@@ -59,9 +59,9 @@ const CheckInOutButtons = ({ employeeId, onCheckStatusChange }) => {
     try {
       const res = await checkOut(employeeId);
       await fetchToday();
-      alert(`Check-out thành công lúc ${res.data.checkOut}`);
+      alert(`Chấm công ra thành công lúc ${res.data.checkOut}`);
     } catch (err) {
-      const message = err.response?.data?.message || "Lỗi Check-out: Có thể bạn chưa Check-in hoặc đã Check-out rồi.";
+      const message = err.response?.data?.message || "Không thể chấm công ra: có thể bạn chưa chấm công vào hoặc đã chấm công ra rồi.";
       alert(message);
       setError(message);
     }
@@ -83,7 +83,7 @@ const CheckInOutButtons = ({ employeeId, onCheckStatusChange }) => {
             : 'bg-white text-green-700 hover:bg-green-50'
         }`}
       >
-        {loading ? 'Đang xử lý...' : hasCheckedIn ? 'Đã Check In' : 'Check In'}
+        {loading ? 'Đang xử lý...' : hasCheckedIn ? 'Đã chấm công vào' : 'Chấm công vào'}
       </button>
 
       {/* Check Out Button */}
@@ -96,7 +96,7 @@ const CheckInOutButtons = ({ employeeId, onCheckStatusChange }) => {
             : 'bg-white/30 text-white hover:bg-white/40'
         }`}
       >
-        {loading ? 'Đang xử lý...' : hasCheckedOut ? 'Đã Check Out' : 'Check Out'}
+        {loading ? 'Đang xử lý...' : hasCheckedOut ? 'Đã chấm công ra' : 'Chấm công ra'}
       </button>
     </div>
   );

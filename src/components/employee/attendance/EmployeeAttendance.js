@@ -255,7 +255,7 @@ export default function EmployeeAttendance() {
         error={qrError}
       />
 
-      {/* Check In/Out Card */}
+      {/* Chấm công vào/ra */}
       <div className="bg-gradient-to-br from-green-500 to-green-700 rounded-lg shadow-lg p-4 sm:p-6 md:p-8 text-white">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-2">
@@ -275,14 +275,14 @@ export default function EmployeeAttendance() {
                 onClick={handleCheckIn}
                 disabled={loading}
               >
-                Check In
+                Chấm công vào
               </button>
               <button
                 className="bg-white/20 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-lg hover:bg-white/30 transition text-xs sm:text-sm w-full sm:w-auto"
                 onClick={handleCheckOut}
                 disabled={loading}
               >
-                Check Out
+                Chấm công ra
               </button>
 
               <button
@@ -297,11 +297,11 @@ export default function EmployeeAttendance() {
 
           <div className="space-y-3 sm:space-y-4">
             <div className="bg-white/10 rounded-lg p-3 sm:p-4">
-              <div className="text-green-100 text-xs sm:text-sm mb-1">Check In</div>
+              <div className="text-green-100 text-xs sm:text-sm mb-1">Giờ vào</div>
               <div className="text-lg sm:text-xl md:text-2xl">{today?.checkIn || '--:--'}</div>
             </div>
             <div className="bg-white/10 rounded-lg p-3 sm:p-4">
-              <div className="text-green-100 text-xs sm:text-sm mb-1">Check Out</div>
+              <div className="text-green-100 text-xs sm:text-sm mb-1">Giờ ra</div>
               <div className="text-lg sm:text-xl md:text-2xl">{today?.checkOut || '--:--'}</div>
             </div>
             <div className="bg-white/10 rounded-lg p-3 sm:p-4">
@@ -356,8 +356,8 @@ export default function EmployeeAttendance() {
             <thead className="bg-gray-50 border-b">
               <tr>
                 <th className="text-left p-2 sm:p-4 text-xs text-gray-600">Ngày</th>
-                <th className="text-left p-2 sm:p-4 text-xs text-gray-600 hidden sm:table-cell">Check In</th>
-                <th className="text-left p-2 sm:p-4 text-xs text-gray-600 hidden sm:table-cell">Check Out</th>
+                <th className="text-left p-2 sm:p-4 text-xs text-gray-600 hidden sm:table-cell">Giờ vào</th>
+                <th className="text-left p-2 sm:p-4 text-xs text-gray-600 hidden sm:table-cell">Giờ ra</th>
                 <th className="text-left p-2 sm:p-4 text-xs text-gray-600 hidden md:table-cell">Tổng giờ</th>
                 <th className="text-left p-2 sm:p-4 text-xs text-gray-600">Trạng thái</th>
                 <th className="text-left p-2 sm:p-4 text-xs text-gray-600 hidden lg:table-cell">Ghi chú</th>

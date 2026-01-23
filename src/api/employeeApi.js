@@ -11,6 +11,14 @@ export const employeeApi = {
     return axiosInstance.put(`${API_BASE_URL}/me`, data);
   },
 
+  updateMyAvatar: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return axiosInstance.post(`${API_BASE_URL}/me/avatar`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+
   // Lấy tất cả nhân viên
   getAll: () => {
     return axiosInstance.get(API_BASE_URL);
@@ -31,6 +39,14 @@ export const employeeApi = {
     return axiosInstance.put(`${API_BASE_URL}/${id}`, data);
   },
 
+  updateAvatar: (id, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return axiosInstance.post(`${API_BASE_URL}/${id}/avatar`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+
   // Xóa nhân viên
   delete: (id) => {
     return axiosInstance.delete(`${API_BASE_URL}/${id}`);
@@ -49,5 +65,29 @@ export const employeeApi = {
   // Tìm kiếm nhân viên
   search: (keyword) => {
     return axiosInstance.get(`${API_BASE_URL}/search`, { params: { keyword } });
+  },
+
+  exportEmployees: () => {
+    return axiosInstance.get(`${API_BASE_URL}/admin/export`, {
+      responseType: 'blob'
+    });
+  },
+
+  downloadEmployeeTemplate: () => {
+    return axiosInstance.get(`${API_BASE_URL}/admin/template`, {
+      responseType: 'blob'
+    });
+  },
+
+  importEmployees: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return axiosInstance.post(`${API_BASE_URL}/admin/import`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  },
+
+  bulkDeleteEmployees: (ids) => {
+    return axiosInstance.post('/admin/employees/bulk-delete', ids);
   }
 };

@@ -192,13 +192,28 @@ export default function EmployeeAttendanceAdmin() {
 
   // Các hàm xử lý admin (cần được implement đầy đủ)
   const handleDelete = async (id) => {
-    if (!window.confirm(`Bạn có chắc muốn xóa bản ghi chấm công ID: ${id}?`)) return;
+    if (!window.confirm(`Bạn có chắc muốn xoá bản ghi chấm công ID: ${id}?`)) return;
     try {
       await adminDeleteAttendance(id);
       fetchAllAttendance(); // Reload lại data
     } catch (err) {
-      console.error("Lỗi khi xóa:", err);
-      alert("Không thể xóa bản ghi");
+      console.error("Lỗi khi xoá:", err);
+      alert("Không thể xoá bản ghi");
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    const ok1 = window.confirm('Bạn có chắc muốn XOÁ TOÀN BỘ dữ liệu chấm công? Hành động này không thể hoàn tác.');
+    if (!ok1) return;
+    const ok2 = window.confirm('Xác nhận lần 2: bạn chắc chắn muốn xoá toàn bộ chấm công?');
+    if (!ok2) return;
+    try {
+      await adminDeleteAllAttendance();
+      await fetchAllAttendance();
+      alert('Đã xoá toàn bộ dữ liệu chấm công');
+    } catch (err) {
+      console.error('Lỗi khi xoá toàn bộ chấm công:', err);
+      alert(err?.response?.data?.message || 'Không thể xoá toàn bộ chấm công');
     }
   };
 
@@ -491,6 +506,15 @@ export default function EmployeeAttendanceAdmin() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <h3 className="text-xl font-semibold text-gray-800">Bản ghi Chấm công theo tháng</h3>
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleDeleteAll}
+                disabled={loading}
+                className="border border-red-300 text-red-700 rounded-lg px-3 py-2 text-sm font-semibold hover:bg-red-50 disabled:opacity-60"
+              >
+                Xoá toàn bộ chấm công
+              </button>
+
               <select
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
                 value={selectedMonth}

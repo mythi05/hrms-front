@@ -108,7 +108,7 @@ export default function LoginEmployee() {
             <div className="demo-box">
               <strong>Tài khoản demo</strong>
               <br />
-              Username: <b>a.nguyen</b>
+              Username: <b>anguyen</b>
               <br />
               Password: <b>123456</b>
             </div>
